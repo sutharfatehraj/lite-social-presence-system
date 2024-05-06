@@ -5,10 +5,9 @@ import (
 	"lite-social-presence-system/literals"
 	"lite-social-presence-system/mongodao"
 	"lite-social-presence-system/server/apis"
+	"lite-social-presence-system/server/router"
 	"log"
 	"net/http"
-
-	"github.com/gorilla/mux"
 )
 
 func main() {
@@ -36,14 +35,7 @@ func main() {
 	apis.InitHandleFriendRequestService(mgDAO)
 	apis.InitRemoveFriendsService(mgDAO)
 
-	r := mux.NewRouter()
-
-	// handlers
-	r.HandleFunc("/game/friends", apis.GetFriends).Methods(http.MethodGet)
-	r.HandleFunc("/game/send-friend-request", apis.SendFriendRequest).Methods(http.MethodPatch)
-	r.HandleFunc("/game/handle-friend-request", apis.HandleFriendRequest).Methods(http.MethodPatch)
-	r.HandleFunc("/game/remove-freinds", apis.RemoveFriends).Methods(http.MethodDelete)
-
+	r := router.InitRoutes()
 	server := &http.Server{
 		Handler: r,
 		Addr:    "127.0.0.1:8081",
