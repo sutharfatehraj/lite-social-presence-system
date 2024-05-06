@@ -1,0 +1,14 @@
+
+<!-- // To run the mongo docker image -->
+sudo docker run -d -p 2717:27017 -v ~/mongodb-docker:/data/db --name mymongo mongo:latest
+
+<!-- // If contatiner is not able to start again -->
+sudo docker rm mymongo
+Run it again
+
+<!-- // to open the mongo shell -->
+sudo docker exec -it mymongo mongosh
+
+<!-- to always restart the container on boot up. 
+Make sure the docker is in enabled state by running >sudo systemctl enable docker -->
+sudo docker update --restart=always mymongo
