@@ -17,3 +17,13 @@ DELETE "/game/remove-freinds"
 
 GET "/game/friends"
 - View Friend List: Users can view their current list of friends.
+
+MongoDB database social-presence-system
+
+collections:
+gameparty
+
+Current Implementation: User can invite anyone to the game party. Not only his firends.
+Future work: User can choose to invite friends for private sessions or open the invitation to the public for more social interaction.
+This can be achieved by providing settings that allow users to switch between modes depending on their preference for each game party.
+

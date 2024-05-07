@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type UserCredentials struct {
 	ID       string `bson:"_id" json:"userid"` // userId is the primary key
@@ -12,13 +14,13 @@ type User struct {
 	ID    string `bson:"_id" json:"userid"` // userId is the primary key
 	Name  string `bson:"name" json:"name"`
 	Email string `bson:"email" json:"email"`
-	Level string `bson:"level" json:"level"`
+	Level string `bson:"level" json:"level"` // this field can be used on UI side to show some kind of symbol with the player
 }
 
 type GetFriendsResponse struct {
 	Success bool     `json:"success"`
-	Friends []*User  `json:"friends"`
-	Errors  []string `json:"errors"`
+	Friends []*User  `json:"friends,omitempty"`
+	Errors  []string `json:"errors,omitempty"`
 }
 
 type FriendRequestStatus string
@@ -48,7 +50,7 @@ type SendFriendRequest struct {
 
 type SendFriendRequestResponse struct {
 	Success bool     `json:"success"`
-	Errors  []string `json:"errors"`
+	Errors  []string `json:"errors,omitempty"`
 }
 
 type HandleFriendRequest struct {
@@ -59,7 +61,7 @@ type HandleFriendRequest struct {
 
 type HandleFriendRequestResponse struct {
 	Success bool     `json:"success"`
-	Errors  []string `json:"errors"`
+	Errors  []string `json:"errors,omitempty"`
 }
 
 type RemoveFriendsRequestData struct {
@@ -69,5 +71,5 @@ type RemoveFriendsRequestData struct {
 
 type RemoveFriendRequestResponse struct {
 	Success bool     `json:"success"`
-	Errors  []string `json:"errors"`
+	Errors  []string `json:"errors,omitempty"`
 }

@@ -22,6 +22,11 @@ type MongoDAO interface {
 	StoreFriendRequests(ctx context.Context, userId string, friendIds []string) error
 	UpdateFriendRequestsStatus(ctx context.Context, userId string, friendIds []string, status models.FriendRequestStatus) error
 	RemoveFriends(ctx context.Context, userId string, friendIds []string) error
+
+	// game party
+	FetchActiveGameParties(ctx context.Context) ([]*models.GameParty, error)
+	CreateGameParty(ctx context.Context, gamePary *models.GameParty) error
+	UpdateGamePartyStatus(ctx context.Context, partyIds []string, status models.GamePartyStatus) error
 }
 
 var mongoDAOStruct MongoDAO
@@ -84,7 +89,7 @@ func Ping(client *mongo.Client, ctx context.Context) error {
 	if err := client.Ping(ctx, readpref.Primary()); err != nil {
 		return err
 	}
-	fmt.Println("connected successfully")
+	fmt.Println("MongoDB connected successfully")
 	return nil
 }
 
@@ -284,4 +289,131 @@ func (m mongoDAO) RemoveFriends(ctx context.Context, userId string, friendIds []
 		return err
 	}
 	return err
+}
+
+func (m mongoDAO) CreateGameParty(ctx context.Context, gameParty *models.GameParty) error {
+
+	docs := bson.M{
+		literals.MongoID:        gameParty.PartyId,
+		literals.MongoCreatedBy: gameParty.CreatedBy,
+		literals.MongoStartTime: gameParty.StartTime,
+		literals.MongoDuration:  gameParty.Duration,
+		literals.MongoStatus:    gameParty.Status,
+	}
+
+	result, err := m.databse.Collection(literals.GamePartyCollection).InsertOne(ctx, docs)
+	if err != nil {
+		fmt.Printf("failed to insert game party in DB. Err: %v\nInsertOneResult: %v\n", err, result)
+		return err
+	}
+	return nil
+}
+
+func (m mongoDAO) UpdateGamePartyStatus(ctx context.Context, partyIds []string, status models.GamePartyStatus) error {
+
+	filter := bson.M{
+		literals.MongoID: bson.M{literals.MongoIn: partyIds},
+	}
+
+	update := bson.M{
+		literals.MongoSet: bson.M{
+			literals.MongoStatus: status,
+		},
+	}
+
+	result, err := m.databse.Collection(literals.GamePartyCollection).UpdateMany(ctx, filter, update)
+	if err != nil {
+		fmt.Printf("Failed to update game party status in DB. Err: %v\nUpdateResult: %v\n", err, result)
+		return err
+	}
+	return nil
+}
+
+func (m mongoDAO) FetchActiveGameParties(ctx context.Context) ([]*models.GameParty, error) {
+
+	filter := bson.M{
+		literals.MongoStatus: models.GamePartyStatusActive,
+	}
+	/*
+		// more safer query
+			filter := bson.D{
+				{literals.MongoStatus, models.GamePartyStatusStatusActive},
+				// literals.Mongo
+				// time since start time + duration < curr time
+				{"$expr", bson.D{
+					{"$gt", bson.A{
+						bson.D{
+							{"$add", bson.A{"$startTime", "$duration"}},
+						},
+						time.Now(),
+					}},
+				}},
+			}
+	*/
+
+	cur, err := m.databse.Collection(literals.GamePartyCollection).Find(ctx, filter)
+	if err != nil {
+		fmt.Println("Error occurred while calling gameparty collection.", err)
+		return nil, err
+	}
+
+	var gameParties []*models.GameParty
+	for cur.Next(ctx) {
+		var gameParty models.GameParty
+		decodeErr := cur.Decode(&gameParty)
+		if decodeErr != nil {
+			fmt.Println("Failed to decode game party document.", decodeErr)
+			return nil, decodeErr
+		}
+		gameParties = append(gameParties, &gameParty)
+	}
+
+	if len(gameParties) == 0 {
+		fmt.Println("No active game parties found")
+		return nil, nil
+	}
+
+	return gameParties, nil
+}
+
+// this should be called at service startup
+// fetch game parties that should have ended.
+// will have (start time + duration) < curr time
+func (m mongoDAO) FetchGamePartiesToBeEnded(ctx context.Context) ([]*models.GameParty, error) {
+	filter := bson.D{
+		{literals.MongoStatus, models.GamePartyStatusActive},
+
+		{"$expr", bson.D{
+			{"$lt", bson.A{
+				bson.D{
+					{"$add", bson.A{"$startTime", "$duration"}},
+				},
+				time.Now(),
+			}},
+		}},
+	}
+
+	cur, err := m.databse.Collection(literals.GamePartyCollection).Find(ctx, filter)
+	if err != nil {
+		fmt.Println("Error occurred while calling gameparty collection.", err)
+		return nil, err
+	}
+
+	var gameParties []*models.GameParty
+	for cur.Next(ctx) {
+		var gameParty models.GameParty
+		decodeErr := cur.Decode(&gameParty)
+		if decodeErr != nil {
+			fmt.Println("Failed to decode game party document.", decodeErr)
+			return nil, decodeErr
+		}
+		gameParties = append(gameParties, &gameParty)
+	}
+
+	if len(gameParties) == 0 {
+		fmt.Println("No active game parties that should have ended")
+		return nil, nil
+	}
+
+	return gameParties, nil
 }
