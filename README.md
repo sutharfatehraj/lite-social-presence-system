@@ -1,25 +1,33 @@
 # lite-social-presence-system
-Backend services for a lite social-presence system online-game using Golang
+Backend services for a lite social-presence system game using Golang
 
-REST APIs
+<hr>
 
-PATCH "/game/send-friend-request"
-- Add Friends: Users can send friend requests to multiple users.
+**MongoDB** <i>[docker container]</i> 
+   - Database: social-presence-system
+   - Collections:
+      -  users
+      -  friends
+      -  gameparty
 
-PATCH "/game/handle-friend-request"
-- Accept/Reject Friend Requests: Users can accept or reject friend requests they receive.
-Note: Friendship is mutual.
+<h4>Friends REST APIs</h4>
 
-Users will get same status for all the friend IDs because you can select and send different statuses with every friend ID from UI.
+1. **PATCH /game/friends/request**
+   - Add Friends: Users can send friend requests to multiple users
 
-DELETE "/game/remove-freinds"
-- Remove Friends: Users can remove other users from their friend list.
+2. **PATCH /game/friends/handle-request**
+   - Accept/Reject Friend Requests: Users can accept or reject friend requests they receive
+   - <i>Notes:
+       - Friendship is mutual
+       - Sending same status for all the friend IDs in the request data</i>
 
-GET "/game/friends"
-- View Friend List: Users can view their current list of friends.
+3. **DELETE /game/friends/remove**
+   - Remove Friends: Users can remove other users from their friend list
 
-MongoDB database social-presence-system
+5. **GET /game/friends**
+   - View Friend List: Users can view their current list of friends
 
-collections:
-gameparty
+<h4>Game Party REST APIs</h4>
 
+1. **POST /game/party/create**
+   - Create Game Party: Users can create a short game party session
