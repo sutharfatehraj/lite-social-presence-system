@@ -1,14 +1,21 @@
-
-<!-- // To run the mongo docker image -->
+To run the mongo docker image
 sudo docker run -d -p 2717:27017 -v ~/mongodb-docker:/data/db --name mymongo mongo:latest
 
-<!-- // If contatiner is not able to start again -->
+If contatiner is not able to start again
 sudo docker rm mymongo
 Run it again
 
-<!-- // to open the mongo shell -->
+To open the mongo shell
 sudo docker exec -it mymongo mongosh
 
-<!-- to always restart the container on boot up. 
-Make sure the docker is in enabled state by running >sudo systemctl enable docker -->
+To always restart the container on boot up.
+Make sure the docker is in enabled state by running >sudo systemctl enable docker 
 sudo docker update --restart=always mymongo
+
+Current Implementation for game party: 
+User can invite anyone to the game party. Not only his firends.
+Future work: User can choose to invite friends for private sessions or open the invitation to the public for more social interaction.
+This can be achieved by providing settings that allow users to switch between modes depending on their preference for each game party.
+
+Future Work on gameparty collection
+Create a Cron job to move all records having game party status as 'over' and time since created greater than 1 month to a backup collection 'gamepartyover' for faster mongo read operations on 'getparty' collection 
