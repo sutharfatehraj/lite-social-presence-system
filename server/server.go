@@ -53,12 +53,16 @@ func main() {
 	// on joining user ID will be moved from accepted array, if present else return, to players array
 
 	// initServices
+	// friends services
 	apis.InitGetUsersService(mgDAO)
 	apis.InitGetFriendsService(mgDAO)
 	apis.InitSendFriendRequestService(mgDAO)
 	apis.InitHandleFriendRequestService(mgDAO)
 	apis.InitRemoveFriendsService(mgDAO)
+
+	// game party services
 	apis.InitCreateGamePartyService(gamerServer, mgDAO)
+	apis.InitInviteToGamePartyService(gamerServer, mgDAO)
 
 	r := router.InitRoutes()
 	server := &http.Server{

@@ -16,6 +16,8 @@ const (
 	MongoExpr     = "$expr"
 	MongoLessThan = "$lt"
 	MongoAdd      = "$add"
+	MongoPush     = "$push"
+	MongoEach     = "$each"
 
 	// MongoDB fields
 	MongoID          = "_id"
@@ -27,4 +29,6 @@ const (
 	MongoCreatedBy   = "createdBy"
 	MongoStartTime   = "startTime"
 	MongoDuration    = "duration"
+
+	MongoGamePartyInvitees = "invitees"
 )

@@ -13,7 +13,7 @@ Make sure the docker is in enabled state by running >sudo systemctl enable docke
 sudo docker update --restart=always mymongo
 
 Current Implementation for game party: 
-User can invite anyone to the game party. Not only his firends.
+User can invite only his firends to the game party.
 Future work: User can choose to invite friends for private sessions or open the invitation to the public for more social interaction.
 This can be achieved by providing settings that allow users to switch between modes depending on their preference for each game party.
 

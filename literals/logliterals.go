@@ -5,4 +5,6 @@ const (
 	LLGamePartyStartTimeInUTC = "gamePartyStartTimeInUTC"
 	LLGamePartyDuration       = "gamePartyDuration"
 	LLPartyId                 = "partyId"
+	LLRequestedFriendIds      = "RequestedFriendIds"
+	LLFriendsFound            = "FriendsFound"
 )

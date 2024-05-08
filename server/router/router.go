@@ -20,5 +20,6 @@ func InitRoutes() *mux.Router {
 
 	// party APIs
 	r.HandleFunc("/game/party/create", apis.CreateGameParty).Methods(http.MethodPost)
+	r.HandleFunc("/game/party/invite", apis.InviteToGamePartyHandler).Methods(http.MethodPatch)
 	return r
 }

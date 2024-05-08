@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -25,8 +26,10 @@ type MongoDAO interface {
 
 	// game party
 	FetchActiveGameParties(ctx context.Context) ([]*models.GameParty, error)
-	CreateGameParty(ctx context.Context, gamePary *models.GameParty) error
 	UpdateGamePartyStatus(ctx context.Context, partyIds []string, status models.GamePartyStatus) error
+	CreateGameParty(ctx context.Context, gamePary *models.GameParty) error
+	CheckFriendship(ctx context.Context, userId string, friendIds []string) (bool, error)
+	AddInviteesToGamePartyCollection(ctx context.Context, partyId string, newInvitees []string) error
 }
 
 var mongoDAOStruct MongoDAO
@@ -291,24 +294,6 @@ func (m mongoDAO) RemoveFriends(ctx context.Context, userId string, friendIds []
 	return err
 }
 
-func (m mongoDAO) CreateGameParty(ctx context.Context, gameParty *models.GameParty) error {
-
-	docs := bson.M{
-		literals.MongoID:        gameParty.PartyId,
-		literals.MongoCreatedBy: gameParty.CreatedBy,
-		literals.MongoStartTime: gameParty.StartTime,
-		literals.MongoDuration:  gameParty.Duration,
-		literals.MongoStatus:    gameParty.Status,
-	}
-
-	result, err := m.databse.Collection(literals.GamePartyCollection).InsertOne(ctx, docs)
-	if err != nil {
-		fmt.Printf("failed to insert game party in DB. Err: %v\nInsertOneResult: %v\n", err, result)
-		return err
-	}
-	return nil
-}
-
 func (m mongoDAO) UpdateGamePartyStatus(ctx context.Context, partyIds []string, status models.GamePartyStatus) error {
 
 	filter := bson.M{
@@ -376,9 +361,89 @@ func (m mongoDAO) FetchActiveGameParties(ctx context.Context) ([]*models.GamePar
 	return gameParties, nil
 }
 
-// this should be called at service startup
-// fetch game parties that should have ended.
-// will have (start time + duration) < curr time
+func (m mongoDAO) CreateGameParty(ctx context.Context, gameParty *models.GameParty) error {
+
+	docs := bson.M{
+		literals.MongoID:        gameParty.PartyId,
+		literals.MongoCreatedBy: gameParty.CreatedBy,
+		literals.MongoStartTime: gameParty.StartTime,
+		literals.MongoDuration:  gameParty.Duration,
+		literals.MongoStatus:    gameParty.Status,
+	}
+
+	result, err := m.databse.Collection(literals.GamePartyCollection).InsertOne(ctx, docs)
+	if err != nil {
+		fmt.Printf("failed to insert game party in DB. Err: %v\nInsertOneResult: %v\n", err, result)
+		return err
+	}
+	return nil
+}
+
+// check if all friendsIDs are friends of the user
+func (m mongoDAO) CheckFriendship(ctx context.Context, userId string, friendIds []string) (bool, error) {
+
+	filter := bson.M{
+		literals.MongoUserId:   userId,
+		literals.MongoStatus:   models.StatusAccepted,
+		literals.MongoFriendId: bson.M{literals.MongoIn: friendIds},
+	}
+
+	cur, err := m.databse.Collection(literals.FriendsCollection).Find(ctx, filter)
+	if err != nil {
+		fmt.Println("Error occurred while calling friends. ", err)
+		return false, err
+	}
+
+	var friends []*models.Friends
+	for cur.Next(ctx) {
+		var friend models.Friends
+		decodeErr := cur.Decode(&friend)
+		if decodeErr != nil {
+			fmt.Println(decodeErr)
+			return false, decodeErr
+		}
+		friends = append(friends, &friend)
+	}
+
+	if len(friends) == 0 {
+		fmt.Println("No friends found")
+		return false, errors.New("no friends found")
+	} else if len(friends) != len(friendIds) {
+		logrus.WithFields(logrus.Fields{
+			literals.LLRequestedFriendIds: friendIds,
+			literals.LLFriendsFound:       (fmt.Sprintf("%+v", friends)),
+		}).Error("requested users are not friends")
+		return false, errors.New("requested users are not friends")
+	}
+
+	return true, nil
+}
+
+func (m mongoDAO) AddInviteesToGamePartyCollection(ctx context.Context, partyId string, newInvitees []string) error {
+
+	filter := bson.M{
+		literals.MongoID: partyId,
+	}
+
+	update := bson.M{
+		literals.MongoPush: bson.M{
+			literals.MongoGamePartyInvitees: bson.M{
+				literals.MongoEach: newInvitees,
+			},
+		},
+		literals.MongoSet: bson.M{},
+	}
+
+	result, err := m.databse.Collection(literals.GamePartyCollection).UpdateMany(ctx, filter, update)
+	if err != nil {
+		fmt.Printf("Failed to add invitess to the game party in the DB. Err: %v\nUpdateResult: %v\n", err, result)
+		return err
+	}
+	return nil
+
+}
+
+// fetch game parties that should have ended.// will have (start time + duration) < curr time
 func (m mongoDAO) FetchGamePartiesToBeEnded(ctx context.Context) ([]*models.GameParty, error) {
 	filter := bson.D{
 		{literals.MongoStatus, models.GamePartyStatusActive},

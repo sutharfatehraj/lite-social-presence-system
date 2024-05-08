@@ -31,3 +31,5 @@ Backend services for a lite social-presence system game using Golang
 
 1. **POST /game/party/create**
    - Create Game Party: Users can create a short game party session
+2. **PATCH /game/party/invite**
+   - Create Game Party: Users can invite their friends to join their game party

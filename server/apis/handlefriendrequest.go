@@ -75,7 +75,7 @@ func (h handleFriendRequest) ValidateRequest(requestData *models.HandleFriendReq
 			// friend Ids should not be repeated more than once
 			for friendId, count := range friendIdCount {
 				if count > 1 {
-					errs = append(errs, errors.New("friendId"+friendId+"sent"+string(rune(count))+"times in the request data"))
+					errs = append(errs, errors.New("friendId "+friendId+" sent "+fmt.Sprint(count)+" times in the request data"))
 				}
 			}
 		}
