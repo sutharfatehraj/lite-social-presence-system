@@ -2,11 +2,14 @@ package common
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"lite-social-presence-system/models"
 	"lite-social-presence-system/mongodao"
 	"time"
 )
+
+// create gameServer file and push all that over there
 
 var PartyDuration time.Duration = 900000 * time.Millisecond // 15 minutes = 900 seconds = 9,00,000 in milliseconds
 
@@ -35,4 +38,24 @@ func NewGameServer(mgDAO mongodao.MongoDAO) (*models.GameServer, error) {
 	return &models.GameServer{
 		Parties: parties,
 	}, nil
+}
+
+// remove data from one slice and append to the other
+func RemoveAndAppendSlice(dataToRemove string, s1 []string, s2 []string) ([]string, []string, error) {
+
+	indexOfDataToRemove := -1
+	for index, data := range s1 {
+		if data == dataToRemove {
+			indexOfDataToRemove = index
+			break
+		}
+	}
+	if indexOfDataToRemove == -1 {
+		return nil, nil, errors.New("data not found in the slice")
+	}
+
+	s1 = append(s1[:indexOfDataToRemove], s1[indexOfDataToRemove+1:]...)
+	s2 = append(s2, dataToRemove)
+
+	return s1, s2, nil
 }

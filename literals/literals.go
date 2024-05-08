@@ -17,6 +17,7 @@ const (
 	MongoLessThan = "$lt"
 	MongoAdd      = "$add"
 	MongoPush     = "$push"
+	MongoPull     = "$pull"
 	MongoEach     = "$each"
 
 	// MongoDB fields
@@ -31,4 +32,9 @@ const (
 	MongoDuration    = "duration"
 
 	MongoGamePartyInvitees = "invitees"
+	MongoGamePartyAccepted = "accepted"
+	MongoGamePartyRejected = "rejected"
+	MongoGamePartyPlayers  = "players"
+	MongoGamePartyExited   = "exited"
+	MongoGamePartyRemoved  = "removed"
 )

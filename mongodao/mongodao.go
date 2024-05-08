@@ -30,6 +30,7 @@ type MongoDAO interface {
 	CreateGameParty(ctx context.Context, gamePary *models.GameParty) error
 	CheckFriendship(ctx context.Context, userId string, friendIds []string) (bool, error)
 	AddInviteesToGamePartyCollection(ctx context.Context, partyId string, newInvitees []string) error
+	PullAndPushDataInGamePartyCollection(ctx context.Context, partyId string, userId string, removeFrom string, addTo string) error
 }
 
 var mongoDAOStruct MongoDAO
@@ -431,7 +432,6 @@ func (m mongoDAO) AddInviteesToGamePartyCollection(ctx context.Context, partyId 
 				literals.MongoEach: newInvitees,
 			},
 		},
-		literals.MongoSet: bson.M{},
 	}
 
 	result, err := m.databse.Collection(literals.GamePartyCollection).UpdateMany(ctx, filter, update)
@@ -440,7 +440,30 @@ func (m mongoDAO) AddInviteesToGamePartyCollection(ctx context.Context, partyId 
 		return err
 	}
 	return nil
+}
 
+// pull user from one array and push to another
+func (m mongoDAO) PullAndPushDataInGamePartyCollection(ctx context.Context, partyId string, userId string, removeFromField string, addToField string) error {
+
+	filter := bson.M{
+		literals.MongoID: partyId,
+	}
+
+	update := bson.M{
+		literals.MongoPull: bson.M{
+			removeFromField: userId, //literals.MongoGamePartyInvitees
+		},
+		literals.MongoPush: bson.M{
+			addToField: userId, //literals.MongoGamePartyAccepted
+		},
+	}
+
+	result, err := m.databse.Collection(literals.GamePartyCollection).UpdateOne(ctx, filter, update)
+	if err != nil {
+		fmt.Printf("Failed to pull and push user in the game party collection. Err: %v\nUpdateResult: %v\n", err, result)
+		return err
+	}
+	return nil
 }
 
 // fetch game parties that should have ended.// will have (start time + duration) < curr time
