@@ -14,8 +14,8 @@ import (
 )
 
 type HandleFriendRequestService interface {
-	ValidateRequest(requestData *models.HandleFriendRequest) []string
-	UpdateFriendRequestStatus(ctx context.Context, requestData *models.HandleFriendRequest) error
+	ValidateRequest(requestData *models.HandleFriendRequestData) []string
+	UpdateFriendRequestStatus(ctx context.Context, requestData *models.HandleFriendRequestData) error
 }
 
 var handleFriendRequestStruct HandleFriendRequestService
@@ -41,7 +41,7 @@ func GetHandleFriendRequestService() HandleFriendRequestService {
 	return handleFriendRequestStruct
 }
 
-func (h handleFriendRequest) ValidateRequest(requestData *models.HandleFriendRequest) []string {
+func (h handleFriendRequest) ValidateRequest(requestData *models.HandleFriendRequestData) []string {
 
 	var errs []error
 	var errorString []string
@@ -102,7 +102,7 @@ func HandleFriendRequest(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	defer func() {
-		result := models.HandleFriendRequestResponse{
+		result := models.HandleFriendRequestResponseData{
 			Success: success,
 			Errors:  errStrings,
 		}
@@ -110,7 +110,7 @@ func HandleFriendRequest(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(result)
 	}()
 
-	requestData := &models.HandleFriendRequest{}
+	requestData := &models.HandleFriendRequestData{}
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		fmt.Printf("failed to read message for handle-freindship request: %v\n", err)
@@ -150,7 +150,7 @@ func HandleFriendRequest(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (h handleFriendRequest) UpdateFriendRequestStatus(ctx context.Context, requestData *models.HandleFriendRequest) error {
+func (h handleFriendRequest) UpdateFriendRequestStatus(ctx context.Context, requestData *models.HandleFriendRequestData) error {
 
 	var allUserIds []string
 	allUserIds = append(allUserIds, requestData.UserId)

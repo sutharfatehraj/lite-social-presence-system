@@ -30,7 +30,7 @@ func main() {
 	mongodao.Ping(client, ctx)
 
 	db := client.Database(literals.Database)
-	mgDAO := mongodao.InitMongoDao(db)
+	mgDAO := mongodao.InitMongoDao(client, db)
 
 	// initialize the game server
 	gamerServer, err := common.NewGameServer(mgDAO)
@@ -64,6 +64,7 @@ func main() {
 	apis.InitCreateGamePartyService(gamerServer, mgDAO)
 	apis.InitInviteToGamePartyService(gamerServer, mgDAO)
 	apis.InitHandleGamePartyInviteService(gamerServer, mgDAO)
+	apis.InitJoinGamePartyService(gamerServer, mgDAO)
 
 	r := router.InitRoutes()
 	server := &http.Server{

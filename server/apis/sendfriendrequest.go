@@ -14,8 +14,8 @@ import (
 )
 
 type SendFriendRequestService interface {
-	StoreFriendRequest(ctx context.Context, requestData *models.SendFriendRequest) error
-	ValidateRequest(requestData *models.SendFriendRequest) []string
+	ValidateRequest(requestData *models.SendFriendRequestData) []string
+	AddFriendRequest(ctx context.Context, requestData *models.SendFriendRequestData) error
 }
 
 var sendFriendRequestStruct SendFriendRequestService
@@ -40,7 +40,7 @@ func SendFriendRequestServiceStruct() SendFriendRequestService {
 	}
 	return sendFriendRequestStruct
 }
-func (r sendFriendRequest) ValidateRequest(requestData *models.SendFriendRequest) []string {
+func (r sendFriendRequest) ValidateRequest(requestData *models.SendFriendRequestData) []string {
 
 	var errs []error
 	var errorString []string
@@ -86,7 +86,7 @@ func (r sendFriendRequest) ValidateRequest(requestData *models.SendFriendRequest
 }
 
 // Send Friend Request
-func SendFriendRequest(w http.ResponseWriter, r *http.Request) {
+func SendFriendRequestHandler(w http.ResponseWriter, r *http.Request) {
 
 	ctx := context.TODO()
 
@@ -96,7 +96,7 @@ func SendFriendRequest(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	defer func() {
-		result := models.SendFriendRequestResponse{
+		result := models.SendFriendRequestResponseData{
 			Success: success,
 			Errors:  errStrings,
 		}
@@ -104,7 +104,7 @@ func SendFriendRequest(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(result)
 	}()
 
-	requestData := &models.SendFriendRequest{}
+	requestData := &models.SendFriendRequestData{}
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		fmt.Printf("failed to read message for freindship request: %v\n", err)
@@ -132,7 +132,7 @@ func SendFriendRequest(w http.ResponseWriter, r *http.Request) {
 		responseStatusCode = http.StatusBadRequest
 		return
 	}
-	err = svc.StoreFriendRequest(ctx, requestData)
+	err = svc.AddFriendRequest(ctx, requestData)
 	if err != nil {
 		fmt.Printf("failed to store freindship request: %v\n", err)
 		success = false
@@ -143,7 +143,7 @@ func SendFriendRequest(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (s sendFriendRequest) StoreFriendRequest(ctx context.Context, requestData *models.SendFriendRequest) error {
+func (s sendFriendRequest) AddFriendRequest(ctx context.Context, requestData *models.SendFriendRequestData) error {
 
 	var allUserIds []string
 	allUserIds = append(allUserIds, requestData.UserId)

@@ -94,7 +94,7 @@ func (f getFriendsService) GetFriendsDetails(ctx context.Context, userId string)
 	var friends []*models.User
 	var err error
 
-	friends, err = f.mongoDAO.GetFreinds(ctx, userId)
+	friends, err = f.mongoDAO.GetFriends(ctx, userId)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

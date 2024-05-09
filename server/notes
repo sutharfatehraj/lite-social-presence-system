@@ -19,3 +19,8 @@ This can be achieved by providing settings that allow users to switch between mo
 
 Future Work on gameparty collection
 Create a Cron job to move all records having game party status as 'over' and time since created greater than 1 month to a backup collection 'gamepartyover' for faster mongo read operations on 'getparty' collection 
+
+When player is online but not in any game party, player status: "idle" else "in-game".
+
+Create a user-login endpoint. This will update the status to "idle".
+Whenver a user logs-in, broadcast a real time message to all his friends with his online status

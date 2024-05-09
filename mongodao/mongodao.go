@@ -18,8 +18,9 @@ import (
 )
 
 type MongoDAO interface {
-	GetFreinds(ctx context.Context, userId string) ([]*models.User, error)
+	GetFriends(ctx context.Context, userId string) ([]*models.User, error)
 	GetUserDetails(ctx context.Context, userIds []string) ([]*models.User, error)
+	UpdateUserStatus(ctx context.Context, userId string, status models.UserStatus) (*mongo.UpdateResult, error)
 	StoreFriendRequests(ctx context.Context, userId string, friendIds []string) error
 	UpdateFriendRequestsStatus(ctx context.Context, userId string, friendIds []string, status models.FriendRequestStatus) error
 	RemoveFriends(ctx context.Context, userId string, friendIds []string) error
@@ -30,8 +31,9 @@ type MongoDAO interface {
 	CreateGameParty(ctx context.Context, gamePary *models.GameParty) error
 	CheckFriendship(ctx context.Context, userId string, friendIds []string) (bool, error)
 	AddInviteesToGamePartyCollection(ctx context.Context, partyId string, newInvitees []string) error
-	UpdatePlayerDecisionForGameParty(ctx context.Context, partyId string, userId string, decision models.GamePartyPlayerStatus) error
+	UpdatePlayerDecisionForGameParty(ctx context.Context, partyId string, userId string, playerStatus models.GamePartyPlayerStatus) error
 
+	// UpdatePlayerAndUserStatusForGameParty(ctx context.Context, partyId string, userId string, playerStatus models.GamePartyPlayerStatus, userStatus models.UserStatus) error
 	// obsolete
 	// PullAndPushDataInGamePartyCollection(ctx context.Context, partyId string, userId string, removeFrom string, addTo string) error
 }
@@ -40,14 +42,14 @@ var mongoDAOStruct MongoDAO
 var mongodaoOnce sync.Once
 
 type mongoDAO struct {
+	client  *mongo.Client
 	databse *mongo.Database
-	// mongodao
-
 }
 
-func InitMongoDao(db *mongo.Database) MongoDAO {
+func InitMongoDao(clnt *mongo.Client, db *mongo.Database) MongoDAO {
 	mongodaoOnce.Do(func() {
 		mongoDAOStruct = &mongoDAO{
+			client:  clnt,
 			databse: db,
 		}
 	})
@@ -101,7 +103,7 @@ func Ping(client *mongo.Client, ctx context.Context) error {
 }
 
 // Get all users who have accepted the friend request
-func (m mongoDAO) GetFreinds(ctx context.Context, userId string) ([]*models.User, error) {
+func (m mongoDAO) GetFriends(ctx context.Context, userId string) ([]*models.User, error) {
 
 	filter := bson.M{
 		literals.MongoUserId: userId,
@@ -167,10 +169,34 @@ func (m mongoDAO) GetUserDetails(ctx context.Context, userIds []string) ([]*mode
 		fmt.Println("No users found")
 		return nil, errors.New("no users found")
 	} else if len(users) != len(userIds) {
-		fmt.Printf("Some users not found, \nRequestedUserIds: %v\nFoundUsers: \n%v\n", userIds, users)
+		logrus.WithFields(logrus.Fields{
+			literals.LLRequestedUserIds: userIds,
+			literals.LLUsersFound:       (fmt.Sprintf("%+v", users)),
+		}).Error("some users not found")
+
 		return nil, errors.New("some users not found")
 	}
 	return users, err
+}
+
+func (m mongoDAO) UpdateUserStatus(ctx context.Context, userId string, status models.UserStatus) (*mongo.UpdateResult, error) {
+
+	filter := bson.M{
+		literals.MongoID: userId,
+	}
+
+	update := bson.M{
+		literals.MongoSet: bson.M{
+			literals.MongoStatus: status,
+		},
+	}
+
+	result, err := m.databse.Collection(literals.UsersCollection).UpdateOne(ctx, filter, update)
+	if err != nil {
+		fmt.Printf("Failed to update user status in the users collection. Err: %v\nUpdateResult: %v\n", err, result)
+		return nil, err
+	}
+	return result, nil
 }
 
 func (m mongoDAO) StoreFriendRequests(ctx context.Context, userId string, friendIds []string) error {
@@ -447,7 +473,7 @@ func (m mongoDAO) AddInviteesToGamePartyCollection(ctx context.Context, partyId 
 	return nil
 }
 
-func (m mongoDAO) UpdatePlayerDecisionForGameParty(ctx context.Context, partyId string, userId string, decision models.GamePartyPlayerStatus) error {
+func (m mongoDAO) UpdatePlayerDecisionForGameParty(ctx context.Context, partyId string, userId string, playerStatus models.GamePartyPlayerStatus) error {
 
 	filter := bson.M{
 		literals.MongoID:               partyId,
@@ -456,7 +482,7 @@ func (m mongoDAO) UpdatePlayerDecisionForGameParty(ctx context.Context, partyId 
 
 	update := bson.M{
 		literals.MongoSet: bson.M{
-			literals.MongoPlayers + userId: decision,
+			literals.MongoPlayers + userId: playerStatus,
 		},
 	}
 
@@ -467,6 +493,53 @@ func (m mongoDAO) UpdatePlayerDecisionForGameParty(ctx context.Context, partyId 
 	}
 	return nil
 }
+
+/*
+// In order to use transactions, you need a MongoDB replica set,
+func (m mongoDAO) UpdatePlayerAndUserStatusForGameParty(ctx context.Context, partyId string, userId string, playerStatus models.GamePartyPlayerStatus, userStatus models.UserStatus) error {
+
+	filter := bson.M{
+		literals.MongoID:               partyId,
+		literals.MongoPlayers + userId: bson.M{literals.MongoExists: true},
+	}
+
+	update := bson.M{
+		literals.MongoSet: bson.M{
+			literals.MongoPlayers + userId: playerStatus,
+		},
+	}
+
+	wc := writeconcern.Majority()
+	txnOptions := options.Transaction().SetWriteConcern(wc)
+
+	session, err := m.client.StartSession()
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			literals.LLInternalError: err,
+			literals.LLPartyId:       partyId,
+			literals.LLUserId:        userId,
+		}).Error("failed to start a mongo session")
+		return err
+	}
+	defer session.EndSession(ctx)
+	_, err = session.WithTransaction(ctx, func(ctx mongo.SessionContext) (interface{}, error) {
+		result, err := m.databse.Collection(literals.GamePartyCollection).UpdateOne(ctx, filter, update)
+		if err != nil {
+			fmt.Printf("Failed to update player status in the game party collection. Err: %v\nUpdateResult: %v\n", err, result)
+			return nil, err
+		}
+
+		// once player has joined a game party, update his status to "in-game"
+		result, err = m.UpdateUserStatus(ctx, userId, userStatus)
+		if err != nil {
+			return nil, err
+		}
+		return result, nil
+	}, txnOptions)
+
+	return err
+}
+*/
 
 /*
 // was created to append and remove data to/from arrays

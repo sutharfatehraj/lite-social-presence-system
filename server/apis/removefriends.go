@@ -97,7 +97,7 @@ func RemoveFriends(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	defer func() {
-		result := models.RemoveFriendRequestResponse{
+		result := models.RemoveFriendRequestResponseData{
 			Success: success,
 			Errors:  errStrings,
 		}
@@ -150,7 +150,7 @@ func (r removeFriendsService) RemoveFriendsFromDB(ctx context.Context, requestDa
 	allUserIds = append(allUserIds, requestData.UserId)
 	allUserIds = append(allUserIds, requestData.FriendIds...)
 
-	// if all are present in users collectio, continue else return error
+	// if all are present in users collection, continue else return error
 	_, err := r.mongoDAO.GetUserDetails(ctx, allUserIds)
 	if err != nil {
 		return err

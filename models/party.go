@@ -8,19 +8,21 @@ import (
 type GamePartyStatus string
 
 const (
-	GamePartyStatusOver   GamePartyStatus = "over"
-	GamePartyStatusActive GamePartyStatus = "active"
+	GamePartyStatusUndefined GamePartyStatus = "undefined"
+	GamePartyStatusOver      GamePartyStatus = "over"
+	GamePartyStatusActive    GamePartyStatus = "active"
 )
 
 type GamePartyPlayerStatus string
 
 const (
-	PlayerInvitedStatus  GamePartyPlayerStatus = "invited"  // users who are invited to the party. They can later accept/reject the invitation
-	PlayerAcceptedStatus GamePartyPlayerStatus = "accepted" // users who have accepted the invitation. They can later join the party
-	PlayerRejectedStatus GamePartyPlayerStatus = "rejected" // users who have rejected the invitation. Can be invited again
-	PlayerJoinedStatus   GamePartyPlayerStatus = "joined"   // users who have joined the party
-	PlayerExitedStatus   GamePartyPlayerStatus = "exited"   // players who have left the party. Can be invited again
-	PlayerRemovedStatus  GamePartyPlayerStatus = "removed"  // players who have been removed from the game party. Can be invited again
+	PlayerStatusUndefined GamePartyPlayerStatus = "undefined"
+	PlayerInvitedStatus   GamePartyPlayerStatus = "invited"  // users who are invited to the party. They can later accept/reject the invitation
+	PlayerAcceptedStatus  GamePartyPlayerStatus = "accepted" // users who have accepted the invitation. They can later join the party
+	PlayerRejectedStatus  GamePartyPlayerStatus = "rejected" // users who have rejected the invitation. Can be invited again
+	PlayerJoinedStatus    GamePartyPlayerStatus = "joined"   // users who have joined the party
+	PlayerExitedStatus    GamePartyPlayerStatus = "exited"   // players who have left the party. Can be invited again
+	PlayerRemovedStatus   GamePartyPlayerStatus = "removed"  // players who have been removed from the game party. Can be invited again
 )
 
 type GameParty struct {
@@ -65,6 +67,37 @@ type HandleGamePartyInviteRequestData struct {
 }
 
 type HandleGamePartyInviteResponseData struct {
+	Success bool     `json:"success"`
+	Errors  []string `json:"errors,omitempty"`
+}
+
+type JoinGamePartyRequestData struct {
+	PartyId string `json:"partyId"`
+	UserId  string `json:"userId"`
+}
+
+type JoinGamePartyResponseData struct {
+	Success bool     `json:"success"`
+	Errors  []string `json:"errors,omitempty"`
+}
+
+type ExitGamePartyRequestData struct {
+	PartyId string `json:"partyId"`
+	UserId  string `json:"userId"`
+}
+
+type ExitGamePartyResponseData struct {
+	Success bool     `json:"success"`
+	Errors  []string `json:"errors,omitempty"`
+}
+
+type RemoveUserFromGamePartyRequestData struct {
+	PartyId   string   `json:"partyId"`
+	UserId    string   `json:"userId"`    // user Id of the user who created the party
+	PlayerIds []string `json:"playerIds"` // must have 'joined' status for him to be removed
+}
+
+type RemoveUserFromGamePartyResponseData struct {
 	Success bool     `json:"success"`
 	Errors  []string `json:"errors,omitempty"`
 }
