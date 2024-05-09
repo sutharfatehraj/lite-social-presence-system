@@ -32,12 +32,12 @@ Backend services for a lite social-presence system game using Golang
 1. **POST /game/party/create**
    - Create Game Party: Users can create a short game party session
 2. **PATCH /game/party/invite**
-   - Create Game Party: Users can invite their friends to join their game party
+   - Invite to Game Party: Users can invite their friends to join their game party
 3. **PATCH /game/party/handle**
-   - Create Game Party: Users can give his decision as accepted/rejected for a game party invitation
+   - Handle Game Party: Users can give his decision as accepted/rejected for a game party invitation
 4. **PATCH /game/party/join**
-   - Create Game Party: Users can join the accepted game party
+   - Join Game Party: Users can join the accepted game party
 5. **POST /game/party/exit**
-   - Create Game Party: Users can exit from a game party
+   - Exit Game Party: Users can exit from a game party
 6. **PATCH /game/party/remove**
-   - Create Game Party: Party leader can remove players from the game party
+   - Remove from Game Party: Party leader can remove players from the game party
