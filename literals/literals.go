@@ -19,6 +19,7 @@ const (
 	MongoPush     = "$push"
 	MongoPull     = "$pull"
 	MongoEach     = "$each"
+	MongoExists   = "$exists"
 
 	// MongoDB fields
 	MongoID          = "_id"
@@ -37,4 +38,6 @@ const (
 	MongoGamePartyPlayers  = "players"
 	MongoGamePartyExited   = "exited"
 	MongoGamePartyRemoved  = "removed"
+
+	MongoPlayers = "players."
 )

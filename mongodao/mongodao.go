@@ -422,21 +422,33 @@ func (m mongoDAO) CheckFriendship(ctx context.Context, userId string, friendIds 
 
 func (m mongoDAO) AddInviteesToGamePartyCollection(ctx context.Context, partyId string, newInvitees []string) error {
 
+	// var filters []bson.M
+
+	var updates bson.M = bson.M{}
+
+	for _, invitee := range newInvitees {
+
+		// this filter will be used in remaining apis as these players must exist in db by then
+		// filters = append(filters, bson.M{
+		// 	literals.MongoPlayers + "." + invitee: bson.M{literals.MongoExists: true},
+		// })
+
+		// is this legit?
+		updates[literals.MongoPlayers+"."+invitee] = models.PlayerInvitedStatus
+	}
+
 	filter := bson.M{
 		literals.MongoID: partyId,
+		// literals.MongoOr: filters, // should this be AND operator?
 	}
 
 	update := bson.M{
-		literals.MongoPush: bson.M{
-			literals.MongoGamePartyInvitees: bson.M{
-				literals.MongoEach: newInvitees,
-			},
-		},
+		literals.MongoSet: updates,
 	}
 
 	result, err := m.databse.Collection(literals.GamePartyCollection).UpdateMany(ctx, filter, update)
 	if err != nil {
-		fmt.Printf("Failed to add invitess to the game party in the DB. Err: %v\nUpdateResult: %v\n", err, result)
+		fmt.Printf("Failed to add invitees to the game party in the DB. Err: %v\nUpdateResult: %v\n", err, result)
 		return err
 	}
 	return nil

@@ -49,12 +49,8 @@ func (c inviteToGamePartyService) ValidateRequest(ctx context.Context, requestDa
 
 	if requestData.UserId == literals.EmptyString {
 		errs = append(errs, errors.New("empty userId in the request data"))
-	}
-
-	if requestData.PartyId == literals.EmptyString {
-		errs = append(errs, errors.New("empty partyId in the request data"))
-	} else if _, ok := c.gameServer.Parties[requestData.PartyId]; !ok {
-		errs = append(errs, errors.New("invalid partyId in the request data"))
+	} else if c.gameServer.Parties[requestData.PartyId] != nil && c.gameServer.Parties[requestData.PartyId].CreatedBy != literals.EmptyString && requestData.UserId != c.gameServer.Parties[requestData.PartyId].CreatedBy {
+		errs = append(errs, errors.New("party "+requestData.PartyId+" not created by "+requestData.UserId))
 	}
 
 	// friend Ids should not be empty
@@ -82,8 +78,29 @@ func (c inviteToGamePartyService) ValidateRequest(ctx context.Context, requestDa
 		}
 	}
 
-	// check if user is not already invited i.e. the requested friendIds are not present in the game server invitees
-	// invite can be sent again if previously accepted/rejected/removed by the user
+	// check party data only if userId and friendIds are correct
+	if errs == nil {
+		if requestData.PartyId == literals.EmptyString {
+			errs = append(errs, errors.New("empty partyId in the request data"))
+		} else {
+			if _, ok := c.gameServer.Parties[requestData.PartyId]; !ok {
+				errs = append(errs, errors.New("invalid partyId in the request data"))
+			} else if c.gameServer.Parties[requestData.PartyId].Players != nil {
+				// players present
+				for _, playerId := range requestData.FriendIds {
+					if playerStatus, ok := c.gameServer.Parties[requestData.PartyId].Players[playerId]; ok {
+						// playerId already present
+						// can be invited again if player status is rejected/exited/removed
+						if playerStatus != models.PlayerExitedStatus && playerStatus != models.PlayerRejectedStatus && playerStatus != models.PlayerRemovedStatus {
+							// cannot invite this player
+							errs = append(errs, errors.New("player "+playerId+" cannot be invited. Has status: "+string(playerStatus)))
+						}
+					}
+				}
+
+			}
+		}
+	}
 
 	if len(errs) > 0 {
 		for _, err := range errs {
@@ -153,7 +170,6 @@ func InviteToGamePartyHandler(w http.ResponseWriter, r *http.Request) {
 
 func (c inviteToGamePartyService) StoreInvitationToGameParty(ctx context.Context, requestData *models.InviteToGamePartyRequestData) error {
 
-	// store invitation for the game party in DB
 	areFriends, err := c.mongoDAO.CheckFriendship(ctx, requestData.UserId, requestData.FriendIds)
 	if err != nil {
 		return err
@@ -167,8 +183,12 @@ func (c inviteToGamePartyService) StoreInvitationToGameParty(ctx context.Context
 		}
 
 		c.gameServer.Mutex.Lock()
-		// check if this properly appends to an
-		c.gameServer.Parties[requestData.PartyId].Invitees = append(c.gameServer.Parties[requestData.PartyId].Invitees, requestData.FriendIds...)
+		if c.gameServer.Parties[requestData.PartyId].Players == nil {
+			c.gameServer.Parties[requestData.PartyId].Players = make(map[string]models.GamePartyPlayerStatus)
+		}
+		for _, playerId := range requestData.FriendIds {
+			c.gameServer.Parties[requestData.PartyId].Players[playerId] = models.PlayerInvitedStatus
+		}
 		c.gameServer.Mutex.Unlock()
 
 	}
