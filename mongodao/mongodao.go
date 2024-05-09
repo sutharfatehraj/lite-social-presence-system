@@ -20,7 +20,7 @@ import (
 type MongoDAO interface {
 	GetFriends(ctx context.Context, userId string) ([]*models.User, error)
 	GetUserDetails(ctx context.Context, userIds []string) ([]*models.User, error)
-	UpdateUserStatus(ctx context.Context, userId string, status models.UserStatus) (*mongo.UpdateResult, error)
+	UpdateUsersStatus(ctx context.Context, userIds []string, status models.UserStatus) (*mongo.UpdateResult, error)
 	StoreFriendRequests(ctx context.Context, userId string, friendIds []string) error
 	UpdateFriendRequestsStatus(ctx context.Context, userId string, friendIds []string, status models.FriendRequestStatus) error
 	RemoveFriends(ctx context.Context, userId string, friendIds []string) error
@@ -31,7 +31,7 @@ type MongoDAO interface {
 	CreateGameParty(ctx context.Context, gamePary *models.GameParty) error
 	CheckFriendship(ctx context.Context, userId string, friendIds []string) (bool, error)
 	AddInviteesToGamePartyCollection(ctx context.Context, partyId string, newInvitees []string) error
-	UpdatePlayerDecisionForGameParty(ctx context.Context, partyId string, userId string, playerStatus models.GamePartyPlayerStatus) error
+	UpdatePlayersDecisionForGameParty(ctx context.Context, partyId string, userIds []string, playerStatus models.GamePartyPlayerStatus) error
 
 	// UpdatePlayerAndUserStatusForGameParty(ctx context.Context, partyId string, userId string, playerStatus models.GamePartyPlayerStatus, userStatus models.UserStatus) error
 	// obsolete
@@ -179,10 +179,10 @@ func (m mongoDAO) GetUserDetails(ctx context.Context, userIds []string) ([]*mode
 	return users, err
 }
 
-func (m mongoDAO) UpdateUserStatus(ctx context.Context, userId string, status models.UserStatus) (*mongo.UpdateResult, error) {
+func (m mongoDAO) UpdateUsersStatus(ctx context.Context, userIds []string, status models.UserStatus) (*mongo.UpdateResult, error) {
 
 	filter := bson.M{
-		literals.MongoID: userId,
+		literals.MongoID: bson.M{literals.MongoIn: userIds},
 	}
 
 	update := bson.M{
@@ -191,9 +191,9 @@ func (m mongoDAO) UpdateUserStatus(ctx context.Context, userId string, status mo
 		},
 	}
 
-	result, err := m.databse.Collection(literals.UsersCollection).UpdateOne(ctx, filter, update)
+	result, err := m.databse.Collection(literals.UsersCollection).UpdateMany(ctx, filter, update)
 	if err != nil {
-		fmt.Printf("Failed to update user status in the users collection. Err: %v\nUpdateResult: %v\n", err, result)
+		fmt.Printf("Failed to update users status in the users collection. Err: %v\nUpdateResult: %v\n", err, result)
 		return nil, err
 	}
 	return result, nil
@@ -454,7 +454,7 @@ func (m mongoDAO) AddInviteesToGamePartyCollection(ctx context.Context, partyId 
 	var updates bson.M = bson.M{}
 
 	for _, invitee := range newInvitees {
-		updates[literals.MongoPlayers+invitee] = models.PlayerInvitedStatus
+		updates[literals.MongoPlayersDotAccess+invitee] = models.PlayerInvitedStatus
 	}
 
 	filter := bson.M{
@@ -473,22 +473,29 @@ func (m mongoDAO) AddInviteesToGamePartyCollection(ctx context.Context, partyId 
 	return nil
 }
 
-func (m mongoDAO) UpdatePlayerDecisionForGameParty(ctx context.Context, partyId string, userId string, playerStatus models.GamePartyPlayerStatus) error {
+func (m mongoDAO) UpdatePlayersDecisionForGameParty(ctx context.Context, partyId string, userIds []string, playerStatus models.GamePartyPlayerStatus) error {
+
+	var updates bson.M = bson.M{}
+	var userFilters []bson.M = []bson.M{}
+
+	for _, userId := range userIds {
+		updates[literals.MongoPlayersDotAccess+userId] = playerStatus
+
+		userFilters = append(userFilters, bson.M{literals.MongoPlayersDotAccess + userId: bson.M{literals.MongoExists: true}})
+	}
 
 	filter := bson.M{
-		literals.MongoID:               partyId,
-		literals.MongoPlayers + userId: bson.M{literals.MongoExists: true},
+		literals.MongoID:  partyId,
+		literals.MongoAnd: userFilters,
 	}
 
 	update := bson.M{
-		literals.MongoSet: bson.M{
-			literals.MongoPlayers + userId: playerStatus,
-		},
+		literals.MongoSet: updates,
 	}
 
-	result, err := m.databse.Collection(literals.GamePartyCollection).UpdateOne(ctx, filter, update)
+	result, err := m.databse.Collection(literals.GamePartyCollection).UpdateMany(ctx, filter, update)
 	if err != nil {
-		fmt.Printf("Failed to update player status in the game party collection. Err: %v\nUpdateResult: %v\n", err, result)
+		fmt.Printf("Failed to update players status in the game party collection. Err: %v\nUpdateResult: %v\n", err, result)
 		return err
 	}
 	return nil

@@ -65,6 +65,8 @@ func main() {
 	apis.InitInviteToGamePartyService(gamerServer, mgDAO)
 	apis.InitHandleGamePartyInviteService(gamerServer, mgDAO)
 	apis.InitJoinGamePartyService(gamerServer, mgDAO)
+	apis.InitExitGamePartyService(gamerServer, mgDAO)
+	apis.InitRemoveUsersFromGamePartyService(gamerServer, mgDAO)
 
 	r := router.InitRoutes()
 	server := &http.Server{

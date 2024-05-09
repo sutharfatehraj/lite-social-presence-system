@@ -23,5 +23,7 @@ func InitRoutes() *mux.Router {
 	r.HandleFunc("/game/party/invite", apis.InviteToGamePartyHandler).Methods(http.MethodPatch)
 	r.HandleFunc("/game/party/handle", apis.HandleGamePartyInviteHandler).Methods(http.MethodPatch)
 	r.HandleFunc("/game/party/join", apis.JoinGamePartyHandler).Methods(http.MethodPatch)
+	r.HandleFunc("/game/party/exit", apis.ExitGamePartyHandler).Methods(http.MethodPatch)
+	r.HandleFunc("/game/party/remove", apis.RemoveFromGamePartyHandler).Methods(http.MethodPatch)
 	return r
 }

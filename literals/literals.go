@@ -12,6 +12,7 @@ const (
 	// MongoDB operators
 	MongoOr       = "$or"
 	MongoIn       = "$in"
+	MongoAnd      = "$and"
 	MongoSet      = "$set"
 	MongoExpr     = "$expr"
 	MongoLessThan = "$lt"
@@ -39,5 +40,5 @@ const (
 	MongoGamePartyExited   = "exited"
 	MongoGamePartyRemoved  = "removed"
 
-	MongoPlayers = "players."
+	MongoPlayersDotAccess = "players."
 )

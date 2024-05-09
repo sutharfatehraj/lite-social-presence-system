@@ -91,13 +91,13 @@ type ExitGamePartyResponseData struct {
 	Errors  []string `json:"errors,omitempty"`
 }
 
-type RemoveUserFromGamePartyRequestData struct {
+type RemoveUsersFromGamePartyRequestData struct {
 	PartyId   string   `json:"partyId"`
-	UserId    string   `json:"userId"`    // user Id of the user who created the party
-	PlayerIds []string `json:"playerIds"` // must have 'joined' status for him to be removed
+	UserId    string   `json:"userId"` // user Id of the user who created the party
+	FriendIds []string `json:"friendIds"`
 }
 
-type RemoveUserFromGamePartyResponseData struct {
+type RemoveUsersFromGamePartyResponseData struct {
 	Success bool     `json:"success"`
 	Errors  []string `json:"errors,omitempty"`
 }

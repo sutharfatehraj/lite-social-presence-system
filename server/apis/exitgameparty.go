@@ -13,37 +13,37 @@ import (
 	"sync"
 )
 
-type JoinGamePartyService interface {
-	ValidateRequest(ctx context.Context, requestData *models.JoinGamePartyRequestData) []string
-	JoinGameParty(ctx context.Context, requestData *models.JoinGamePartyRequestData) error
+type ExitGamePartyService interface {
+	ValidateRequest(ctx context.Context, requestData *models.ExitGamePartyRequestData) []string
+	ExitGameParty(ctx context.Context, requestData *models.ExitGamePartyRequestData) error
 }
 
-var joinGamePartyServiceStruct JoinGamePartyService
-var joinGamePartyServiceOnce sync.Once
+var exitGamePartyServiceStruct ExitGamePartyService
+var exitGamePartyServiceOnce sync.Once
 
-type joinGamePartyService struct {
+type exitGamePartyService struct {
 	gameServer *models.GameServer
 	mongoDAO   mongodao.MongoDAO
 }
 
-func InitJoinGamePartyService(gameSrvr *models.GameServer, mongodao mongodao.MongoDAO) JoinGamePartyService {
-	joinGamePartyServiceOnce.Do(func() {
-		joinGamePartyServiceStruct = &joinGamePartyService{
+func InitExitGamePartyService(gameSrvr *models.GameServer, mongodao mongodao.MongoDAO) ExitGamePartyService {
+	exitGamePartyServiceOnce.Do(func() {
+		exitGamePartyServiceStruct = &exitGamePartyService{
 			gameServer: gameSrvr,
 			mongoDAO:   mongodao,
 		}
 	})
-	return joinGamePartyServiceStruct
+	return exitGamePartyServiceStruct
 }
 
-func GetJoinGamePartyService() JoinGamePartyService {
-	if joinGamePartyServiceStruct == nil {
-		panic("JoinGameParty Service not initialized")
+func GetExitGamePartyService() ExitGamePartyService {
+	if exitGamePartyServiceStruct == nil {
+		panic("ExitGameParty Service not initialized")
 	}
-	return joinGamePartyServiceStruct
+	return exitGamePartyServiceStruct
 }
 
-func (c joinGamePartyService) ValidateRequest(ctx context.Context, requestData *models.JoinGamePartyRequestData) []string {
+func (c exitGamePartyService) ValidateRequest(ctx context.Context, requestData *models.ExitGamePartyRequestData) []string {
 	var errs []error
 	var errorString []string
 
@@ -56,13 +56,13 @@ func (c joinGamePartyService) ValidateRequest(ctx context.Context, requestData *
 	}
 
 	if errs == nil {
-		// user should be present in party as a player and should have status as accepted
+		// user should be present in party as a player and should have status as joined
 		if _, ok := c.gameServer.Parties[requestData.PartyId]; !ok {
 			errs = append(errs, errors.New("invalid partyId in the request data"))
 		} else if c.gameServer.Parties[requestData.PartyId].Players != nil {
 			if playerStatus, ok := c.gameServer.Parties[requestData.PartyId].Players[requestData.UserId]; ok {
-				// player can join if his current status is "accepted"
-				if playerStatus != models.PlayerAcceptedStatus {
+				// player can exit if his current status is "joined"
+				if playerStatus != models.PlayerJoinedStatus {
 					errs = append(errs, errors.New("player "+requestData.UserId+" has current status: "+string(playerStatus)+". cannot update decision to "+string(models.PlayerJoinedStatus)))
 				}
 			} else {
@@ -83,7 +83,7 @@ func (c joinGamePartyService) ValidateRequest(ctx context.Context, requestData *
 	return nil
 }
 
-func JoinGamePartyHandler(w http.ResponseWriter, r *http.Request) {
+func ExitGamePartyHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := context.TODO()
 
 	success := true
@@ -92,7 +92,7 @@ func JoinGamePartyHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	defer func() {
-		result := models.JoinGamePartyResponseData{
+		result := models.ExitGamePartyResponseData{
 			Success: success,
 			Errors:  errStrings,
 		}
@@ -100,10 +100,10 @@ func JoinGamePartyHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(result)
 	}()
 
-	requestData := &models.JoinGamePartyRequestData{}
+	requestData := &models.ExitGamePartyRequestData{}
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
-		fmt.Printf("failed to read join game party message: %v\n", err)
+		fmt.Printf("failed to read exit game party message: %v\n", err)
 		success = false
 		responseStatusCode = http.StatusInternalServerError
 		errStrings = append(errStrings, err.Error())
@@ -111,7 +111,7 @@ func JoinGamePartyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	err = json.Unmarshal(data, requestData)
 	if err != nil {
-		fmt.Printf("failed to unmarshal join game party message : %v\n", err)
+		fmt.Printf("failed to unmarshal exit game party message : %v\n", err)
 		success = false
 		responseStatusCode = http.StatusInternalServerError
 		errStrings = append(errStrings, err.Error())
@@ -120,7 +120,7 @@ func JoinGamePartyHandler(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Printf("Request data: %+v\n", requestData)
 
-	svc := GetJoinGamePartyService()
+	svc := GetExitGamePartyService()
 
 	errStrings = svc.ValidateRequest(ctx, requestData)
 	if errStrings != nil {
@@ -129,7 +129,7 @@ func JoinGamePartyHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = svc.JoinGameParty(ctx, requestData)
+	err = svc.ExitGameParty(ctx, requestData)
 	if err != nil {
 		fmt.Printf("failed to join the game party: %v\n", err)
 		success = false
@@ -139,20 +139,21 @@ func JoinGamePartyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (c joinGamePartyService) JoinGameParty(ctx context.Context, requestData *models.JoinGamePartyRequestData) error {
+func (c exitGamePartyService) ExitGameParty(ctx context.Context, requestData *models.ExitGamePartyRequestData) error {
 
-	err := c.mongoDAO.UpdatePlayersDecisionForGameParty(ctx, requestData.PartyId, []string{requestData.UserId}, models.PlayerJoinedStatus)
+	err := c.mongoDAO.UpdatePlayersDecisionForGameParty(ctx, requestData.PartyId, []string{requestData.UserId}, models.PlayerExitedStatus)
 	if err != nil {
 		return err
 	}
 
-	_, err = c.mongoDAO.UpdateUsersStatus(ctx, []string{requestData.UserId}, models.UserStatusInGame)
+	// update user status to idle
+	_, err = c.mongoDAO.UpdateUsersStatus(ctx, []string{requestData.UserId}, models.UserStatusIdle)
 	if err != nil {
 		return err
 	}
 
 	c.gameServer.Mutex.Lock()
-	c.gameServer.Parties[requestData.PartyId].Players[requestData.UserId] = models.PlayerJoinedStatus
+	c.gameServer.Parties[requestData.PartyId].Players[requestData.UserId] = models.PlayerExitedStatus
 	c.gameServer.Mutex.Unlock()
 
 	return nil

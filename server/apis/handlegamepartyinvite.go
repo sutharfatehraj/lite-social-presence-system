@@ -145,7 +145,7 @@ func HandleGamePartyInviteHandler(w http.ResponseWriter, r *http.Request) {
 
 func (c handleGamePartyInviteService) HandleInvitationToGameParty(ctx context.Context, requestData *models.HandleGamePartyInviteRequestData) error {
 
-	err := c.mongoDAO.UpdatePlayerDecisionForGameParty(ctx, requestData.PartyId, requestData.UserId, requestData.Status)
+	err := c.mongoDAO.UpdatePlayersDecisionForGameParty(ctx, requestData.PartyId, []string{requestData.UserId}, requestData.Status)
 	if err != nil {
 		return err
 	}

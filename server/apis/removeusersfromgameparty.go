@@ -13,37 +13,37 @@ import (
 	"sync"
 )
 
-type InviteToGamePartyService interface {
-	ValidateRequest(ctx context.Context, requestData *models.InviteToGamePartyRequestData) []string
-	StoreInvitationToGameParty(ctx context.Context, requestData *models.InviteToGamePartyRequestData) error
+type RemoveUsersFromGamePartyService interface {
+	ValidateRequest(ctx context.Context, requestData *models.RemoveUsersFromGamePartyRequestData) []string
+	RemoveUsersFromGameParty(ctx context.Context, requestData *models.RemoveUsersFromGamePartyRequestData) error
 }
 
-var inviteToGamePartyServiceStruct InviteToGamePartyService
-var inviteToGamePartyServiceOnce sync.Once
+var removeUsersFromGamePartyServiceStruct RemoveUsersFromGamePartyService
+var removeUsersFromGamePartyServiceOnce sync.Once
 
-type inviteToGamePartyService struct {
+type removeUsersFromGamePartyService struct {
 	gameServer *models.GameServer
 	mongoDAO   mongodao.MongoDAO
 }
 
-func InitInviteToGamePartyService(gameSrvr *models.GameServer, mongodao mongodao.MongoDAO) InviteToGamePartyService {
-	inviteToGamePartyServiceOnce.Do(func() {
-		inviteToGamePartyServiceStruct = &inviteToGamePartyService{
+func InitRemoveUsersFromGamePartyService(gameSrvr *models.GameServer, mongodao mongodao.MongoDAO) RemoveUsersFromGamePartyService {
+	removeUsersFromGamePartyServiceOnce.Do(func() {
+		removeUsersFromGamePartyServiceStruct = &removeUsersFromGamePartyService{
 			gameServer: gameSrvr,
 			mongoDAO:   mongodao,
 		}
 	})
-	return inviteToGamePartyServiceStruct
+	return removeUsersFromGamePartyServiceStruct
 }
 
-func GetInviteToGamePartyService() InviteToGamePartyService {
-	if inviteToGamePartyServiceStruct == nil {
-		panic("InviteToGameParty Service not initialized")
+func GetRemoveUsersFromGamePartyService() RemoveUsersFromGamePartyService {
+	if removeUsersFromGamePartyServiceStruct == nil {
+		panic("RemoveUsersFromGameParty Service not initialized")
 	}
-	return inviteToGamePartyServiceStruct
+	return removeUsersFromGamePartyServiceStruct
 }
 
-func (c inviteToGamePartyService) ValidateRequest(ctx context.Context, requestData *models.InviteToGamePartyRequestData) []string {
+func (c removeUsersFromGamePartyService) ValidateRequest(ctx context.Context, requestData *models.RemoveUsersFromGamePartyRequestData) []string {
 	var errs []error
 	var errorString []string
 
@@ -78,6 +78,10 @@ func (c inviteToGamePartyService) ValidateRequest(ctx context.Context, requestDa
 		}
 	}
 
+	if requestData.PartyId == literals.EmptyString {
+		errs = append(errs, errors.New("empty partyId in the request data"))
+	}
+
 	// check party data only if userId and friendIds are correct
 	if errs == nil {
 		if requestData.PartyId == literals.EmptyString {
@@ -86,18 +90,17 @@ func (c inviteToGamePartyService) ValidateRequest(ctx context.Context, requestDa
 			if _, ok := c.gameServer.Parties[requestData.PartyId]; !ok {
 				errs = append(errs, errors.New("invalid partyId in the request data"))
 			} else if c.gameServer.Parties[requestData.PartyId].Players != nil {
-				// players present
+				// players present in the game party
 				for _, playerId := range requestData.FriendIds {
 					if playerStatus, ok := c.gameServer.Parties[requestData.PartyId].Players[playerId]; ok {
 						// playerId already present
-						// can be invited again if player status is 'rejected/exited/removed'
-						if playerStatus != models.PlayerExitedStatus && playerStatus != models.PlayerRejectedStatus && playerStatus != models.PlayerRemovedStatus {
-							// cannot invite this player
-							errs = append(errs, errors.New("player "+playerId+" cannot be invited. Has status: "+string(playerStatus)))
+						// can be removed if player status is 'joined'
+						if playerStatus != models.PlayerJoinedStatus {
+							// cannot remove this player
+							errs = append(errs, errors.New("player "+playerId+" cannot be removed. Has status: "+string(playerStatus)))
 						}
 					}
 				}
-
 			}
 		}
 	}
@@ -112,7 +115,7 @@ func (c inviteToGamePartyService) ValidateRequest(ctx context.Context, requestDa
 	return nil
 }
 
-func InviteToGamePartyHandler(w http.ResponseWriter, r *http.Request) {
+func RemoveFromGamePartyHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := context.TODO()
 
 	success := true
@@ -121,7 +124,7 @@ func InviteToGamePartyHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	defer func() {
-		result := models.InviteToGamePartyResponseData{
+		result := models.RemoveUsersFromGamePartyResponseData{
 			Success: success,
 			Errors:  errStrings,
 		}
@@ -129,10 +132,10 @@ func InviteToGamePartyHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(result)
 	}()
 
-	requestData := &models.InviteToGamePartyRequestData{}
+	requestData := &models.RemoveUsersFromGamePartyRequestData{}
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
-		fmt.Printf("failed to read invite to game party message: %v\n", err)
+		fmt.Printf("failed to read remove from game party message: %v\n", err)
 		success = false
 		responseStatusCode = http.StatusInternalServerError
 		errStrings = append(errStrings, err.Error())
@@ -140,7 +143,7 @@ func InviteToGamePartyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	err = json.Unmarshal(data, requestData)
 	if err != nil {
-		fmt.Printf("failed to unmarshal invite to game party message : %v\n", err)
+		fmt.Printf("failed to unmarshal remove from game party message : %v\n", err)
 		success = false
 		responseStatusCode = http.StatusInternalServerError
 		errStrings = append(errStrings, err.Error())
@@ -149,7 +152,7 @@ func InviteToGamePartyHandler(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Printf("Request data: %+v\n", requestData)
 
-	svc := GetInviteToGamePartyService()
+	svc := GetRemoveUsersFromGamePartyService()
 
 	errStrings = svc.ValidateRequest(ctx, requestData)
 	if errStrings != nil {
@@ -158,9 +161,9 @@ func InviteToGamePartyHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = svc.StoreInvitationToGameParty(ctx, requestData)
+	err = svc.RemoveUsersFromGameParty(ctx, requestData)
 	if err != nil {
-		fmt.Printf("failed to store invitation to the game party: %v\n", err)
+		fmt.Printf("failed to join the game party: %v\n", err)
 		success = false
 		responseStatusCode = http.StatusInternalServerError
 		errStrings = append(errStrings, err.Error())
@@ -168,30 +171,24 @@ func InviteToGamePartyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (c inviteToGamePartyService) StoreInvitationToGameParty(ctx context.Context, requestData *models.InviteToGamePartyRequestData) error {
+func (c removeUsersFromGamePartyService) RemoveUsersFromGameParty(ctx context.Context, requestData *models.RemoveUsersFromGamePartyRequestData) error {
 
-	areFriends, err := c.mongoDAO.CheckFriendship(ctx, requestData.UserId, requestData.FriendIds)
+	err := c.mongoDAO.UpdatePlayersDecisionForGameParty(ctx, requestData.PartyId, requestData.FriendIds, models.PlayerRemovedStatus)
 	if err != nil {
 		return err
 	}
-	if areFriends {
 
-		err = c.mongoDAO.AddInviteesToGamePartyCollection(ctx, requestData.PartyId, requestData.FriendIds)
-		if err != nil {
-			return err
-		}
-
-		c.gameServer.Mutex.Lock()
-		// if no players have been added till now, initialize the map
-		if c.gameServer.Parties[requestData.PartyId].Players == nil {
-			c.gameServer.Parties[requestData.PartyId].Players = make(map[string]models.GamePartyPlayerStatus)
-		}
-		for _, playerId := range requestData.FriendIds {
-			c.gameServer.Parties[requestData.PartyId].Players[playerId] = models.PlayerInvitedStatus
-		}
-		c.gameServer.Mutex.Unlock()
-
+	// update the users status to idle
+	_, err = c.mongoDAO.UpdateUsersStatus(ctx, requestData.FriendIds, models.UserStatusIdle)
+	if err != nil {
+		return err
 	}
+
+	c.gameServer.Mutex.Lock()
+	for _, playerId := range requestData.FriendIds {
+		c.gameServer.Parties[requestData.PartyId].Players[playerId] = models.PlayerRemovedStatus
+	}
+	c.gameServer.Mutex.Unlock()
 
 	return nil
 }
