@@ -30,7 +30,10 @@ type MongoDAO interface {
 	CreateGameParty(ctx context.Context, gamePary *models.GameParty) error
 	CheckFriendship(ctx context.Context, userId string, friendIds []string) (bool, error)
 	AddInviteesToGamePartyCollection(ctx context.Context, partyId string, newInvitees []string) error
-	PullAndPushDataInGamePartyCollection(ctx context.Context, partyId string, userId string, removeFrom string, addTo string) error
+	UpdatePlayerDecisionForGameParty(ctx context.Context, partyId string, userId string, decision models.GamePartyPlayerStatus) error
+
+	// obsolete
+	// PullAndPushDataInGamePartyCollection(ctx context.Context, partyId string, userId string, removeFrom string, addTo string) error
 }
 
 var mongoDAOStruct MongoDAO
@@ -102,7 +105,7 @@ func (m mongoDAO) GetFreinds(ctx context.Context, userId string) ([]*models.User
 
 	filter := bson.M{
 		literals.MongoUserId: userId,
-		literals.MongoStatus: models.StatusAccepted,
+		literals.MongoStatus: models.FriendshipStatusAccepted,
 	}
 
 	cur, err := m.databse.Collection(literals.FriendsCollection).Find(ctx, filter)
@@ -180,7 +183,7 @@ func (m mongoDAO) StoreFriendRequests(ctx context.Context, userId string, friend
 		docs = append(docs, bson.M{
 			literals.MongoID:          uuid.NewString(),
 			literals.MongoUserId:      userId,
-			literals.MongoStatus:      models.StatusPending,
+			literals.MongoStatus:      models.FriendshipStatusPending,
 			literals.MongoRequestedBy: userId,
 			literals.MongoFriendId:    friendId,
 			literals.MongoRequestedOn: time,
@@ -189,7 +192,7 @@ func (m mongoDAO) StoreFriendRequests(ctx context.Context, userId string, friend
 		docs = append(docs, bson.M{
 			literals.MongoID:          uuid.NewString(),
 			literals.MongoUserId:      friendId,
-			literals.MongoStatus:      models.StatusPending,
+			literals.MongoStatus:      models.FriendshipStatusPending,
 			literals.MongoRequestedBy: userId,
 			literals.MongoFriendId:    userId,
 			literals.MongoRequestedOn: time,
@@ -385,7 +388,7 @@ func (m mongoDAO) CheckFriendship(ctx context.Context, userId string, friendIds 
 
 	filter := bson.M{
 		literals.MongoUserId:   userId,
-		literals.MongoStatus:   models.StatusAccepted,
+		literals.MongoStatus:   models.FriendshipStatusAccepted,
 		literals.MongoFriendId: bson.M{literals.MongoIn: friendIds},
 	}
 
@@ -422,24 +425,14 @@ func (m mongoDAO) CheckFriendship(ctx context.Context, userId string, friendIds 
 
 func (m mongoDAO) AddInviteesToGamePartyCollection(ctx context.Context, partyId string, newInvitees []string) error {
 
-	// var filters []bson.M
-
 	var updates bson.M = bson.M{}
 
 	for _, invitee := range newInvitees {
-
-		// this filter will be used in remaining apis as these players must exist in db by then
-		// filters = append(filters, bson.M{
-		// 	literals.MongoPlayers + "." + invitee: bson.M{literals.MongoExists: true},
-		// })
-
-		// is this legit?
-		updates[literals.MongoPlayers+"."+invitee] = models.PlayerInvitedStatus
+		updates[literals.MongoPlayers+invitee] = models.PlayerInvitedStatus
 	}
 
 	filter := bson.M{
 		literals.MongoID: partyId,
-		// literals.MongoOr: filters, // should this be AND operator?
 	}
 
 	update := bson.M{
@@ -454,6 +447,29 @@ func (m mongoDAO) AddInviteesToGamePartyCollection(ctx context.Context, partyId 
 	return nil
 }
 
+func (m mongoDAO) UpdatePlayerDecisionForGameParty(ctx context.Context, partyId string, userId string, decision models.GamePartyPlayerStatus) error {
+
+	filter := bson.M{
+		literals.MongoID:               partyId,
+		literals.MongoPlayers + userId: bson.M{literals.MongoExists: true},
+	}
+
+	update := bson.M{
+		literals.MongoSet: bson.M{
+			literals.MongoPlayers + userId: decision,
+		},
+	}
+
+	result, err := m.databse.Collection(literals.GamePartyCollection).UpdateOne(ctx, filter, update)
+	if err != nil {
+		fmt.Printf("Failed to update player status in the game party collection. Err: %v\nUpdateResult: %v\n", err, result)
+		return err
+	}
+	return nil
+}
+
+/*
+// was created to append and remove data to/from arrays
 // pull user from one array and push to another
 func (m mongoDAO) PullAndPushDataInGamePartyCollection(ctx context.Context, partyId string, userId string, removeFromField string, addToField string) error {
 
@@ -477,7 +493,9 @@ func (m mongoDAO) PullAndPushDataInGamePartyCollection(ctx context.Context, part
 	}
 	return nil
 }
+*/
 
+/*
 // fetch game parties that should have ended.// will have (start time + duration) < curr time
 func (m mongoDAO) FetchGamePartiesToBeEnded(ctx context.Context) ([]*models.GameParty, error) {
 	filter := bson.D{
@@ -517,3 +535,4 @@ func (m mongoDAO) FetchGamePartiesToBeEnded(ctx context.Context) ([]*models.Game
 
 	return gameParties, nil
 }
+*/

@@ -26,9 +26,9 @@ type GetFriendsResponse struct {
 type FriendRequestStatus string
 
 const (
-	StatusPending  FriendRequestStatus = "pending"
-	StatusAccepted FriendRequestStatus = "accepted"
-	StatusRejected FriendRequestStatus = "rejected"
+	FriendshipStatusPending  FriendRequestStatus = "pending"
+	FriendshipStatusAccepted FriendRequestStatus = "accepted"
+	FriendshipStatusRejected FriendRequestStatus = "rejected"
 )
 
 // accepted/rejected/pending

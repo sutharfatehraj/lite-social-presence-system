@@ -11,7 +11,8 @@ import (
 
 // create gameServer file and push all that over there
 
-var PartyDuration time.Duration = 900000 * time.Millisecond // 15 minutes = 900 seconds = 9,00,000 in milliseconds
+// var PartyDuration time.Duration = 900000 * time.Millisecond // 15 minutes = 900 seconds = 9,00,000 in milliseconds
+var PartyDuration time.Duration = 900000000 * time.Millisecond // 10 days
 
 func NewGameServer(mgDAO mongodao.MongoDAO) (*models.GameServer, error) {
 	var gameParties []*models.GameParty

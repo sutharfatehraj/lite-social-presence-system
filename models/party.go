@@ -15,12 +15,12 @@ const (
 type GamePartyPlayerStatus string
 
 const (
-	PlayerInvitedStatus  GamePartyPlayerStatus = "invited"
-	PlayerAcceptedStatus GamePartyPlayerStatus = "accepted"
-	PlayerRejectedStatus GamePartyPlayerStatus = "rejected"
-	PlayerJoinedStatus   GamePartyPlayerStatus = "joined"
-	PlayerExitedStatus   GamePartyPlayerStatus = "exited"
-	PlayerRemovedStatus  GamePartyPlayerStatus = "removed"
+	PlayerInvitedStatus  GamePartyPlayerStatus = "invited"  // users who are invited to the party. They can later accept/reject the invitation
+	PlayerAcceptedStatus GamePartyPlayerStatus = "accepted" // users who have accepted the invitation. They can later join the party
+	PlayerRejectedStatus GamePartyPlayerStatus = "rejected" // users who have rejected the invitation. Can be invited again
+	PlayerJoinedStatus   GamePartyPlayerStatus = "joined"   // users who have joined the party
+	PlayerExitedStatus   GamePartyPlayerStatus = "exited"   // players who have left the party. Can be invited again
+	PlayerRemovedStatus  GamePartyPlayerStatus = "removed"  // players who have been removed from the game party. Can be invited again
 )
 
 type GameParty struct {
@@ -29,17 +29,7 @@ type GameParty struct {
 	StartTime time.Time       `bson:"startTime" json:"startTime"` // time when party was created
 	Duration  time.Duration   `bson:"duration" json:"duration"`   // duration for which the party is created
 	Status    GamePartyStatus `bson:"status" json:"status"`       // status of the game party
-
-	Players map[string]GamePartyPlayerStatus
-
-	// Inefficient appraoch. Will take more space and time complexity
-	// Invitees []string `bson:"invitees" json:"invitees"` // users who are invited to the party. They can later accept/reject the invitation
-	// Accepted []string `bson:"accepted" json:"accepted"` // users who have accepted the invitation. They can later join the party
-	// Rejected []string `bson:"rejected" json:"rejected"` // users who have rejected the invitation.
-	// Players  []string `bson:"players" json:"players"`   // users who have joined the party
-	// Exited  []string `bson:"exited" json:"exited"`   // players who have left the party, can rejoin again if the party is still ON?
-	// Removed []string `bson:"removed" json:"removed"` // players who have been removed from the group
-
+	Players   map[string]GamePartyPlayerStatus
 }
 
 type GameServer struct {
@@ -64,6 +54,17 @@ type InviteToGamePartyRequestData struct {
 }
 
 type InviteToGamePartyResponseData struct {
+	Success bool     `json:"success"`
+	Errors  []string `json:"errors,omitempty"`
+}
+
+type HandleGamePartyInviteRequestData struct {
+	PartyId string                `json:"partyId"`
+	UserId  string                `json:"userId"`
+	Status  GamePartyPlayerStatus `json:"status"` // to accept/reject the game party invitation
+}
+
+type HandleGamePartyInviteResponseData struct {
 	Success bool     `json:"success"`
 	Errors  []string `json:"errors,omitempty"`
 }

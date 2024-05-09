@@ -176,13 +176,13 @@ func (c inviteToGamePartyService) StoreInvitationToGameParty(ctx context.Context
 	}
 	if areFriends {
 
-		// append the the userId to the invitees array
 		err = c.mongoDAO.AddInviteesToGamePartyCollection(ctx, requestData.PartyId, requestData.FriendIds)
 		if err != nil {
 			return err
 		}
 
 		c.gameServer.Mutex.Lock()
+		// if no players have been added till now, initialize the map
 		if c.gameServer.Parties[requestData.PartyId].Players == nil {
 			c.gameServer.Parties[requestData.PartyId].Players = make(map[string]models.GamePartyPlayerStatus)
 		}

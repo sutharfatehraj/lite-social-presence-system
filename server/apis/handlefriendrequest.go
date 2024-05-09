@@ -52,7 +52,7 @@ func (h handleFriendRequest) ValidateRequest(requestData *models.HandleFriendReq
 	}
 
 	// status should be accepted/rejected
-	if requestData.Status != models.StatusAccepted && requestData.Status != models.StatusRejected {
+	if requestData.Status != models.FriendshipStatusAccepted && requestData.Status != models.FriendshipStatusRejected {
 		errs = append(errs, errors.New("status not qual to accepted/rejected in the request data"))
 	}
 

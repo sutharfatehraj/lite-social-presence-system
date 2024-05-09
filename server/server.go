@@ -63,6 +63,7 @@ func main() {
 	// game party services
 	apis.InitCreateGamePartyService(gamerServer, mgDAO)
 	apis.InitInviteToGamePartyService(gamerServer, mgDAO)
+	apis.InitHandleGamePartyInviteService(gamerServer, mgDAO)
 
 	r := router.InitRoutes()
 	server := &http.Server{
@@ -93,7 +94,7 @@ func CheckPartyDuration(gameServer *models.GameServer, mgDAO mongodao.MongoDAO) 
 	gameServer.Mutex.Unlock()
 
 	/*
-		This approach is not to be used for larger dataset.
+		This approach is not efficient for larger dataset.
 		For larger data set, terminate every party separately.
 	*/
 	if len(partyIdsToBeTerminated) > 0 {
