@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+
+// option go_package = "./gampepb"; //import path of the package that will contain all the generated code for that file in Go // in this case, the generated go package will be name 'gamepb' in current directory and pb.go file will be placed inside that
+option go_package = "./"; //import path of the package that will contain all the generated code for that file in Go
+
+// protoc --go_out=. *.proto
+
+message Player {
+    string playerId = 1;
+    string name = 2;
+}
+
+message PlayersInParty {
+    repeated Player Players = 1;
+}

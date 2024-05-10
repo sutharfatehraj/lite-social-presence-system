@@ -7,6 +7,7 @@ require (
 	github.com/gorilla/mux v1.8.1
 	github.com/sirupsen/logrus v1.9.3
 	go.mongodb.org/mongo-driver v1.15.0
+	google.golang.org/protobuf v1.34.1
 )
 
 require (
