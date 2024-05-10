@@ -80,6 +80,8 @@ func main() {
 
 // terminate the game party if the time is over
 func CheckPartyDuration(gameServer *models.GameServer, mgDAO mongodao.MongoDAO) {
+
+	var usersStatusToBeUpdated []string
 	var partyIdsToBeTerminated []string
 	gameServer.Mutex.Lock()
 	for partyId, gameParty := range gameServer.Parties {
@@ -90,6 +92,13 @@ func CheckPartyDuration(gameServer *models.GameServer, mgDAO mongodao.MongoDAO) 
 				literals.LLGamePartyDuration:       gameParty.Duration,
 				literals.LLPartyId:                 partyId,
 			}).Info("Terminating party")
+			usersStatusToBeUpdated = append(usersStatusToBeUpdated, string(gameParty.CreatedBy))
+			for userId, status := range gameParty.Players {
+				if status == models.PlayerJoinedStatus {
+					usersStatusToBeUpdated = append(usersStatusToBeUpdated, userId)
+				}
+
+			}
 			partyIdsToBeTerminated = append(partyIdsToBeTerminated, partyId)
 			delete(gameServer.Parties, partyId)
 		}
@@ -102,5 +111,8 @@ func CheckPartyDuration(gameServer *models.GameServer, mgDAO mongodao.MongoDAO) 
 	*/
 	if len(partyIdsToBeTerminated) > 0 {
 		mgDAO.UpdateGamePartyStatus(context.TODO(), partyIdsToBeTerminated, models.GamePartyStatusOver)
+
+		// update users status to idle
+		mgDAO.UpdateUsersStatus(context.TODO(), usersStatusToBeUpdated, models.UserStatusIdle)
 	}
 }
