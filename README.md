@@ -43,6 +43,7 @@ Backend services for a lite social-presence system game using Golang
    - Remove from Game Party: Party leader can remove players from the game party
 
 <h4>Real time update services</h4>
-1. **User should get a notification whenever a player joins the party**
+
+1. **User gets a notification whenever a player joins the party**
 
 

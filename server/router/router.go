@@ -16,6 +16,11 @@ func InitRoutes() *mux.Router {
 	r := mux.NewRouter()
 
 	// handlers
+
+	// user APIs
+	r.HandleFunc("/user/login", apis.UserLogInHandler).Methods(http.MethodPatch)
+	r.HandleFunc("/user/logout", apis.UserLogOutHandler).Methods(http.MethodPatch)
+
 	// friends APIs
 	r.HandleFunc("/game/friends", apis.GetFriends).Methods(http.MethodGet) // /game/friends{id} -> then fetch using mux.Vars to getch path varaibles
 	r.HandleFunc("/game/friends/request", apis.SendFriendRequestHandler).Methods(http.MethodPatch)
@@ -36,6 +41,11 @@ func InitRoutes() *mux.Router {
 
 func InitServices(gamerServer *models.GameServer, mgDAO mongodao.MongoDAO) {
 	// init services
+
+	// user services
+	apis.InitUserLoginService(gamerServer, mgDAO)
+	apis.InitUserLogOutService(mgDAO)
+
 	// friends services
 	apis.InitGetUsersService(mgDAO)
 	apis.InitGetFriendsService(mgDAO)

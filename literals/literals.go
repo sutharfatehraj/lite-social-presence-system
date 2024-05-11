@@ -14,6 +14,7 @@ const (
 	UsersCollection     = "users"
 	FriendsCollection   = "friends"
 	GamePartyCollection = "gameparty"
+	UserCredsCollection = "usercreds"
 
 	// MongoDB operators
 	MongoOr       = "$or"
@@ -30,6 +31,7 @@ const (
 
 	// MongoDB fields
 	MongoID          = "_id"
+	MongoPassword    = "password"
 	MongoUserId      = "userId"
 	MongoFriendId    = "friendId"
 	MongoStatus      = "status"

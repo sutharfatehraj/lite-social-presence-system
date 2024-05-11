@@ -177,7 +177,7 @@ func (c inviteToGamePartyService) StoreInvitationToGameParty(ctx context.Context
 	}
 	if areFriends {
 
-		err = c.mongoDAO.AddInviteesToGamePartyCollection(ctx, requestData.PartyId, requestData.FriendIds)
+		err = c.mongoDAO.AddInviteesToGameParty(ctx, requestData.PartyId, requestData.FriendIds)
 		if err != nil {
 			return err
 		}

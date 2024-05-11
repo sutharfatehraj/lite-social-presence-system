@@ -18,6 +18,8 @@ import (
 )
 
 type MongoDAO interface {
+	CheckUserCreds(ctx context.Context, userId string, pwd string) (bool, error)
+
 	GetFriends(ctx context.Context, userId string) ([]*models.User, error)
 	GetUserDetails(ctx context.Context, userIds []string) ([]*models.User, error)
 	UpdateUsersStatus(ctx context.Context, userIds []string, status models.UserStatus) (*mongo.UpdateResult, error)
@@ -30,7 +32,7 @@ type MongoDAO interface {
 	UpdateGamePartyStatus(ctx context.Context, partyIds []string, status models.GamePartyStatus) error
 	CreateGameParty(ctx context.Context, gamePary *models.GameParty) error
 	CheckFriendship(ctx context.Context, userId string, friendIds []string) (bool, error)
-	AddInviteesToGamePartyCollection(ctx context.Context, partyId string, newInvitees []string) error
+	AddInviteesToGameParty(ctx context.Context, partyId string, newInvitees []string) error
 	UpdatePlayersDecisionForGameParty(ctx context.Context, partyId string, userIds []string, playerStatus models.GamePartyPlayerStatus) error
 
 	// UpdatePlayerAndUserStatusForGameParty(ctx context.Context, partyId string, userId string, playerStatus models.GamePartyPlayerStatus, userStatus models.UserStatus) error
@@ -100,6 +102,27 @@ func Ping(client *mongo.Client, ctx context.Context) error {
 	}
 	fmt.Println("MongoDB connected successfully")
 	return nil
+}
+
+func (m mongoDAO) CheckUserCreds(ctx context.Context, userId string, pwd string) (bool, error) {
+	filter := bson.M{
+		literals.MongoID:       userId,
+		literals.MongoPassword: pwd,
+	}
+
+	var userCreds models.UserCredentials
+
+	err := m.databse.Collection(literals.UserCredsCollection).FindOne(ctx, filter).Decode(&userCreds)
+	if err != nil {
+		if err.Error() == "mongo: no documents in result" {
+			return false, errors.New("incorrect user credentials")
+		} else {
+			fmt.Println("Error while fetching data from usercreds collection.", err)
+			return false, err
+		}
+	}
+
+	return true, nil
 }
 
 // Get all users who have accepted the friend request
@@ -449,7 +472,7 @@ func (m mongoDAO) CheckFriendship(ctx context.Context, userId string, friendIds 
 	return true, nil
 }
 
-func (m mongoDAO) AddInviteesToGamePartyCollection(ctx context.Context, partyId string, newInvitees []string) error {
+func (m mongoDAO) AddInviteesToGameParty(ctx context.Context, partyId string, newInvitees []string) error {
 
 	var updates bson.M = bson.M{}
 
