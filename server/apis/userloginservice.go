@@ -22,14 +22,14 @@ var userLoginServiceOnce sync.Once
 
 type userLoginService struct {
 	mongoDAO   mongodao.MongoDAO
-	gameServer *models.GameServer
+	userServer *models.UserServer
 }
 
-func InitUserLoginService(gameSrvr *models.GameServer, mongodao mongodao.MongoDAO) UserLoginService {
+func InitUserLoginService(mongodao mongodao.MongoDAO, userSrvr *models.UserServer) UserLoginService {
 	userLoginServiceOnce.Do(func() {
 		userLoginServiceStruct = &userLoginService{
 			mongoDAO:   mongodao,
-			gameServer: gameSrvr,
+			userServer: userSrvr,
 		}
 	})
 	return userLoginServiceStruct
@@ -129,7 +129,22 @@ func (u userLoginService) LogInUser(ctx context.Context, requestData *models.Use
 		if err != nil {
 			return nil, err
 		}
+		go AsyncMsgPublishToFriend(ctx, u, requestData.UserId)
 		return users[0], nil
 	}
 	return nil, err
+}
+
+func AsyncMsgPublishToFriend(ctx context.Context, u userLoginService, userId string) {
+	// find this user's friends
+	friends, friendFetchErr := u.mongoDAO.GetUserFriends(ctx, userId)
+	if friendFetchErr != nil {
+		return
+	}
+	for _, friend := range friends {
+		if u.userServer != nil && u.userServer.UserDetails != nil && u.userServer.UserDetails[friend.FriendId] != nil && u.userServer.UserDetails[friend.FriendId].FriendOnlineUpdateMsg != nil {
+			u.userServer.UserDetails[friend.FriendId].FriendOnlineUpdateMsg <- fmt.Sprintf("%v is now online", userId)
+		}
+	}
+
 }

@@ -1,7 +1,6 @@
 package apis
 
 import (
-	"fmt"
 	"lite-social-presence-system/literals"
 	"lite-social-presence-system/models"
 	"lite-social-presence-system/protos/gampepb"
@@ -18,16 +17,18 @@ var userServiceOnce sync.Once
 
 type userService struct {
 	gampepb.UnimplementedUserServiceServer
+	userServer *models.UserServer
 	gameServer *models.GameServer
 }
 
-func InitStreamService(gamerServer *models.GameServer) *grpc.Server {
+func InitStreamService(usrSrvr *models.UserServer, gamerSrvr *models.GameServer) *grpc.Server {
 	// create a gRPC server
 	grpcServer := grpc.NewServer()
 
 	userServiceOnce.Do(func() {
 		userServiceStruct := &userService{
-			gameServer: gamerServer,
+			userServer: usrSrvr,
+			gameServer: gamerSrvr,
 		}
 		gampepb.RegisterUserServiceServer(grpcServer, userServiceStruct)
 	})
@@ -37,28 +38,41 @@ func InitStreamService(gamerServer *models.GameServer) *grpc.Server {
 
 func (s userService) StreamUserStatusChange(requestData *gampepb.UserStatusChangeRequest, stream gampepb.UserService_StreamUserStatusChangeServer) error {
 
-	log.Printf("fetch response for userId : %v", requestData.UserId)
+	log.Printf("stream friend online status update for userId : %v", requestData.UserId)
 
-	var wg sync.WaitGroup
-	for i := 0; i < 5; i++ {
-		wg.Add(1)
-		go func(count int64) {
-			defer wg.Done()
-			time.Sleep(time.Duration(count) * time.Second)
-			resp := gampepb.UserStatusChangeResponse{
-				FriendId: fmt.Sprint(i),
-				Name:     "Fj" + fmt.Sprint(i),
-				Message:  fmt.Sprint(requestData.UserId + "is online"),
-			}
+	var errMsg string
 
-			if err := stream.Send(&resp); err != nil {
-				log.Printf("send error %v\n", err)
-			}
-			log.Printf("finishing request number : %d", count)
-		}(int64(i))
+	if requestData.UserId != literals.EmptyString {
+		var wg sync.WaitGroup
+
+		// initialize the channel
+		s.userServer.UserDetails[requestData.UserId] = &models.UserDetails{
+			FriendOnlineUpdateMsg: make(chan string),
+		}
+		for msg := range s.userServer.UserDetails[requestData.UserId].FriendOnlineUpdateMsg {
+			wg.Add(1)
+			go func(msg string) {
+				defer wg.Done()
+				time.Sleep(1 * time.Second)
+				resp := gampepb.UserStatusChangeResponse{
+					Message: msg,
+				}
+
+				if err := stream.Send(&resp); err != nil {
+					log.Printf("send error %v\n", err)
+				}
+				log.Printf("finishing sending the message : %v\n", msg)
+			}(msg)
+		}
+		wg.Wait()
+	} else {
+		errMsg = "empty userId"
 	}
 
-	wg.Wait()
+	if errMsg != literals.EmptyString {
+		log.Println(errMsg)
+		return status.Errorf(codes.InvalidArgument, errMsg)
+	}
 	return nil
 }
 
@@ -66,10 +80,9 @@ func (s userService) StreamUserStatusChange(requestData *gampepb.UserStatusChang
 // userId can be of the one who created the party or who has joined the game
 func (s userService) StreamPlayerJoinedStatus(requestData *gampepb.PlayerInPartyRequest, stream gampepb.UserService_StreamPlayerJoinedStatusServer) error {
 
-	log.Printf("fetch response for userId : %v", requestData.PartyId)
+	log.Printf("stream player joined message for userId : %v", requestData.PartyId)
 	var errMsg string
 
-	var wg sync.WaitGroup
 	if s.gameServer.Parties != nil {
 		if gameParty, ok := s.gameServer.Parties[requestData.PartyId]; ok {
 			userFound := false
@@ -81,6 +94,8 @@ func (s userService) StreamPlayerJoinedStatus(requestData *gampepb.PlayerInParty
 				}
 			}
 			if userFound || gameParty.CreatedBy == requestData.UserId {
+
+				var wg sync.WaitGroup
 
 				// initialize the channel to listen to any player joining
 				// gameParty.PlayerStatusUpdateMsg = make(chan string) // unbuffered channel
@@ -101,7 +116,7 @@ func (s userService) StreamPlayerJoinedStatus(requestData *gampepb.PlayerInParty
 					}(msg)
 				}
 				wg.Wait()
-				close(gameParty.PlayerStatusUpdateMsg) //close the channel here
+				// close(gameParty.PlayerStatusUpdateMsg) //close the channel here?
 			} else {
 				errMsg = "invalid userId. User has either not created the party or has not joined the party"
 			}

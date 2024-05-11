@@ -25,19 +25,19 @@ const (
 	PlayerRemovedStatus   GamePartyPlayerStatus = "removed"  // players who have been removed from the game party. Can be invited again
 )
 
-type GameParty struct {
-	PartyId               string          `bson:"_id" json:"partyId"`         // unique game party identifier
-	CreatedBy             string          `bson:"createdBy" json:"createdBy"` // user that created the party
-	StartTime             time.Time       `bson:"startTime" json:"startTime"` // time when party was created
-	Duration              time.Duration   `bson:"duration" json:"duration"`   // duration for which the party is created
-	Status                GamePartyStatus `bson:"status" json:"status"`       // status of the game party
-	Players               map[string]GamePartyPlayerStatus
-	PlayerStatusUpdateMsg chan string `json:"status"`
-}
-
 type GameServer struct {
 	Parties map[string]*GameParty
 	Mutex   sync.Mutex
+}
+
+type GameParty struct {
+	PartyId               string                           `bson:"_id" json:"partyId"`         // unique game party identifier
+	CreatedBy             string                           `bson:"createdBy" json:"createdBy"` // user that created the party
+	StartTime             time.Time                        `bson:"startTime" json:"startTime"` // time when party was created
+	Duration              time.Duration                    `bson:"duration" json:"duration"`   // duration for which the party is created
+	Status                GamePartyStatus                  `bson:"status" json:"status"`       // status of the game party
+	Players               map[string]GamePartyPlayerStatus `bson:"players" json:"players"`
+	PlayerStatusUpdateMsg chan string                      `json:"playerStatusUpdateMsg"`
 }
 
 type CreateGamePartyRequestData struct {

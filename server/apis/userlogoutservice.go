@@ -114,5 +114,7 @@ func (u userLogOutService) LogOutUser(ctx context.Context, requestData *models.U
 		return errors.New("failed to logout")
 	}
 
+	// asynchronously make the user server channel as nil if present
+
 	return nil
 }

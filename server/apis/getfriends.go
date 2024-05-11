@@ -13,7 +13,7 @@ import (
 )
 
 type GetFriendsService interface {
-	GetFriendsDetails(ctx context.Context, userId string) ([]*models.User, error)
+	GetFriends(ctx context.Context, userId string) ([]*models.User, error)
 }
 
 var getFriendsServiceStruct GetFriendsService
@@ -40,7 +40,7 @@ func GetFriendsServiceStruct() GetFriendsService {
 }
 
 // GET Friends
-func GetFriends(w http.ResponseWriter, r *http.Request) {
+func GetFriendsHandler(w http.ResponseWriter, r *http.Request) {
 
 	ctx := context.TODO()
 
@@ -77,7 +77,7 @@ func GetFriends(w http.ResponseWriter, r *http.Request) {
 	}
 
 	svc := GetFriendsServiceStruct()
-	friends, err = svc.GetFriendsDetails(ctx, userId)
+	friends, err = svc.GetFriends(ctx, userId)
 	if err != nil {
 		success = false
 		responseStatusCode = http.StatusInternalServerError
@@ -90,12 +90,12 @@ func GetFriends(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (f getFriendsService) GetFriendsDetails(ctx context.Context, userId string) ([]*models.User, error) {
+func (f getFriendsService) GetFriends(ctx context.Context, userId string) ([]*models.User, error) {
 
 	var friends []*models.User
 	var err error
 
-	friends, err = f.mongoDAO.GetFriends(ctx, userId)
+	friends, err = f.mongoDAO.GetFriendsDetails(ctx, userId)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

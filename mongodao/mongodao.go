@@ -20,12 +20,13 @@ import (
 type MongoDAO interface {
 	CheckUserCreds(ctx context.Context, userId string, pwd string) (bool, error)
 
-	GetFriends(ctx context.Context, userId string) ([]*models.User, error)
+	GetFriendsDetails(ctx context.Context, userId string) ([]*models.User, error)
 	GetUserDetails(ctx context.Context, userIds []string) ([]*models.User, error)
 	UpdateUsersStatus(ctx context.Context, userIds []string, status models.UserStatus) (*mongo.UpdateResult, error)
 	StoreFriendRequests(ctx context.Context, userId string, friendIds []string) error
 	UpdateFriendRequestsStatus(ctx context.Context, userId string, friendIds []string, status models.FriendRequestStatus) error
 	RemoveFriends(ctx context.Context, userId string, friendIds []string) error
+	GetUserFriends(ctx context.Context, userId string) ([]*models.Friends, error)
 
 	// game party
 	FetchActiveGameParties(ctx context.Context) ([]*models.GameParty, error)
@@ -125,8 +126,40 @@ func (m mongoDAO) CheckUserCreds(ctx context.Context, userId string, pwd string)
 	return true, nil
 }
 
+func (m mongoDAO) GetUserFriends(ctx context.Context, userId string) ([]*models.Friends, error) {
+
+	filter := bson.M{
+		literals.MongoUserId: userId,
+		literals.MongoStatus: models.FriendshipStatusAccepted,
+	}
+
+	cur, err := m.databse.Collection(literals.FriendsCollection).Find(ctx, filter)
+	if err != nil {
+		fmt.Println("Error occurred while calling friends. ", err)
+		return nil, err
+	}
+
+	var friends []*models.Friends
+	for cur.Next(ctx) {
+		var friend models.Friends
+		decodeErr := cur.Decode(&friend)
+		if decodeErr != nil {
+			fmt.Println(decodeErr)
+			return nil, decodeErr
+		}
+		friends = append(friends, &friend)
+	}
+
+	if len(friends) == 0 {
+		fmt.Println("No friends found")
+		return nil, errors.New("no friends found")
+	}
+
+	return friends, nil
+}
+
 // Get all users who have accepted the friend request
-func (m mongoDAO) GetFriends(ctx context.Context, userId string) ([]*models.User, error) {
+func (m mongoDAO) GetFriendsDetails(ctx context.Context, userId string) ([]*models.User, error) {
 
 	filter := bson.M{
 		literals.MongoUserId: userId,

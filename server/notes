@@ -58,3 +58,7 @@ Real time services
 1. notify the user whenever a player joins the party
     - 1st invoke the gRPC call "StreamPlayerJoinedStatus" from Postman
     - Then, join the game party
+
+2. notify the user whenever his friend comes online
+
+ToDo: have multiple instances

@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"context"
@@ -18,7 +18,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func main() {
+func StartServer() {
 	// Get Client, Context, CalcelFunc and err from connect method.
 	client, ctx, cancel, errConnecting := mongodao.Connect("mongodb://127.0.0.1:2717/") //"mongodb://localhost:2717")
 	if errConnecting != nil {
@@ -41,6 +41,9 @@ func main() {
 		return
 	}
 
+	// initialize the user server
+	userServer := common.NewUserServer()
+
 	// keep checking game party duration in the background
 	go func() {
 		for {
@@ -50,7 +53,7 @@ func main() {
 	}()
 
 	// init services
-	router.InitServices(gamerServer, mgDAO)
+	router.InitServices(mgDAO, userServer, gamerServer)
 
 	fmt.Println("Starting the server...")
 
@@ -78,7 +81,7 @@ func main() {
 		}
 
 		// create a gRPC server
-		grpcServer := apis.InitStreamService(gamerServer)
+		grpcServer := apis.InitStreamService(userServer, gamerServer)
 
 		fmt.Printf("gRPC server started on %v address\n", literals.GRPCServerAddress)
 		if err := grpcServer.Serve(lis); err != nil {

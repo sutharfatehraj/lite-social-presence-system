@@ -41,6 +41,13 @@ func NewGameServer(mgDAO mongodao.MongoDAO) (*models.GameServer, error) {
 	}, nil
 }
 
+func NewUserServer() *models.UserServer {
+	return &models.UserServer{
+		UserDetails: make(map[string]*models.UserDetails),
+	}
+
+}
+
 // remove data from one slice and append to the other
 func RemoveAndAppendSlice(dataToRemove string, s1 []string, s2 []string) ([]string, []string, error) {
 

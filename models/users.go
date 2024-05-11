@@ -1,5 +1,7 @@
 package models
 
+import "sync"
+
 type UserStatus string
 
 const (
@@ -9,6 +11,22 @@ const (
 	UserStatusInGame    UserStatus = "in-game"
 	// UserStatusSuspended UserStatus = "suspended"
 )
+
+// to keep track of all online users
+type UserServer struct {
+	UserDetails map[string]*UserDetails
+	Mutex       sync.Mutex
+}
+
+// type UserAndFriendId struct {
+// 	UserId   string
+// 	FriendId string
+// }
+
+type UserDetails struct {
+	// FriendId              string      `json:"friendId"`
+	FriendOnlineUpdateMsg chan string `json:"playerStatusUpdateMsg"`
+}
 
 type UserCredentials struct {
 	ID       string `bson:"_id" json:"userId"` // userId is the primary key

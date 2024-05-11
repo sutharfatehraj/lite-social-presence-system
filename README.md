@@ -45,5 +45,6 @@ Backend services for a lite social-presence system game using Golang
 <h4>Real time update services</h4>
 
 1. **User gets a notification whenever a player joins the party**
+2. **User Friend gets a notification whenever he logs in**
 
 
