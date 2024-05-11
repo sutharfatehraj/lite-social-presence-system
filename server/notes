@@ -48,3 +48,10 @@ For protocol buffers
 
 5. generate go code for the proto file
     protoc --go_out=. --go-grpc_out=. ./game.proto
+
+-----------
+
+Real time services
+1. notify the user whenever a player joins the party
+    - 1st invoke the gRPC call "StreamPlayerJoinedStatus" from Postman
+    - Then, join the game party

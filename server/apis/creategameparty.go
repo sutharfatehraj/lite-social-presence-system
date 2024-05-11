@@ -124,6 +124,12 @@ func (c createGamePartyService) CreateAndStoreGameParty(ctx context.Context, req
 		return literals.EmptyString, err
 	}
 
+	// update the user status to "in-game"
+	_, err = c.mongoDAO.UpdateUsersStatus(ctx, []string{requestData.UserId}, models.UserStatusInGame)
+	if err != nil {
+		return literals.EmptyString, err
+	}
+
 	c.gameServer.Mutex.Lock()
 	c.gameServer.Parties[partyId] = gameParty
 	c.gameServer.Mutex.Unlock()

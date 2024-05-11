@@ -29,7 +29,8 @@ message UserStatusChangeResponse {
 }
 
 message PlayerInPartyRequest{
-    string partyId = 1;
+    string userId = 1;
+    string partyId = 2;
 }
 
 message PlayersInPartyResponse{

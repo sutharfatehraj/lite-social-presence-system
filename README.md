@@ -41,3 +41,8 @@ Backend services for a lite social-presence system game using Golang
    - Exit Game Party: Users can exit from a game party
 6. **PATCH /game/party/remove**
    - Remove from Game Party: Party leader can remove players from the game party
+
+<h4>Real time update services</h4>
+1. **User should get a notification whenever a player joins the party**
+
+
