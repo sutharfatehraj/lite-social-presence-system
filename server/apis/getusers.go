@@ -67,6 +67,7 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 		// 	log.Printf("Unable to marshal the response : %v", err)
 		// 	responseStatusCode = http.StatusInternalServerError
 		// }
+		// w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(responseStatusCode)
 
 		// w.Write(response) // should always be at last

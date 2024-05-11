@@ -96,6 +96,7 @@ func JoinGamePartyHandler(w http.ResponseWriter, r *http.Request) {
 			Success: success,
 			Errors:  errStrings,
 		}
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(responseStatusCode)
 		json.NewEncoder(w).Encode(result)
 	}()
@@ -153,6 +154,12 @@ func (c joinGamePartyService) JoinGameParty(ctx context.Context, requestData *mo
 
 	c.gameServer.Mutex.Lock()
 	c.gameServer.Parties[requestData.PartyId].Players[requestData.UserId] = models.PlayerJoinedStatus
+
+	// if channel is initialized to listen for any player joining the game
+	if c.gameServer.Parties[requestData.PartyId].PlayerStatusUpdateMsg != nil {
+		c.gameServer.Parties[requestData.PartyId].PlayerStatusUpdateMsg <- requestData.UserId + " has " + string(models.PlayerJoinedStatus) + " the party"
+	}
+
 	c.gameServer.Mutex.Unlock()
 
 	return nil

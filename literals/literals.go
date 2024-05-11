@@ -1,6 +1,12 @@
 package literals
 
 const (
+	RestAPIServerAddress = "127.0.0.1:8081"
+
+	// gRPC
+	GRPCNetwork       = "tcp"
+	GRPCServerAddress = "127.0.0.1:8083"
+
 	EmptyString = ""
 
 	// MongoDB

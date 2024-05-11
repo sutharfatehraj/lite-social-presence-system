@@ -1,16 +1,42 @@
 syntax = "proto3";
 
+package protos;
 
-// option go_package = "./gampepb"; //import path of the package that will contain all the generated code for that file in Go // in this case, the generated go package will be name 'gamepb' in current directory and pb.go file will be placed inside that
-option go_package = "./"; //import path of the package that will contain all the generated code for that file in Go
+option go_package = "./gampepb"; //import path of the package that will contain all the generated code for that file in Go // in this case, the generated go package will be name 'gamepb' in current directory and pb.go file will be placed inside that
+// option go_package = "./"; //import path of the package that will contain all the generated code for that file in Go
 
 // protoc --go_out=. *.proto
+// protoc --go_out=. --go-grpc_out=. ./game.proto
 
-message Player {
-    string playerId = 1;
-    string name = 2;
+// message Player {
+//     string playerId = 1;
+//     string name = 2;
+// }
+
+// message PlayersInParty {
+//     repeated Player Players = 1;
+// }
+
+message UserStatusChangeRequest {
+    string userId = 1;
+    string status = 2;
 }
 
-message PlayersInParty {
-    repeated Player Players = 1;
+message UserStatusChangeResponse {
+    string friendId = 1;
+    string name = 2;
+    string message = 3;
+}
+
+message PlayerInPartyRequest{
+    string partyId = 1;
+}
+
+message PlayersInPartyResponse{
+    string message = 1;
+}
+
+service UserService {
+ rpc StreamUserStatusChange(UserStatusChangeRequest) returns (stream UserStatusChangeResponse){}
+ rpc StreamPlayerJoinedStatus(PlayerInPartyRequest) returns (stream PlayersInPartyResponse){}
 }

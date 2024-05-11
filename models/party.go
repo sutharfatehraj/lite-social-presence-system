@@ -26,12 +26,13 @@ const (
 )
 
 type GameParty struct {
-	PartyId   string          `bson:"_id" json:"partyId"`         // unique game party identifier
-	CreatedBy string          `bson:"createdBy" json:"createdBy"` // user that created the party
-	StartTime time.Time       `bson:"startTime" json:"startTime"` // time when party was created
-	Duration  time.Duration   `bson:"duration" json:"duration"`   // duration for which the party is created
-	Status    GamePartyStatus `bson:"status" json:"status"`       // status of the game party
-	Players   map[string]GamePartyPlayerStatus
+	PartyId               string          `bson:"_id" json:"partyId"`         // unique game party identifier
+	CreatedBy             string          `bson:"createdBy" json:"createdBy"` // user that created the party
+	StartTime             time.Time       `bson:"startTime" json:"startTime"` // time when party was created
+	Duration              time.Duration   `bson:"duration" json:"duration"`   // duration for which the party is created
+	Status                GamePartyStatus `bson:"status" json:"status"`       // status of the game party
+	Players               map[string]GamePartyPlayerStatus
+	PlayerStatusUpdateMsg chan string `json:"status"`
 }
 
 type GameServer struct {

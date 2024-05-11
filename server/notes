@@ -24,3 +24,27 @@ When player is online but not in any game party, player status: "idle" else "in-
 
 Create a user-login endpoint. This will update the status to "idle".
 Whenver a user logs-in, broadcast a real time message to all his friends with his online status
+
+For protocol buffers
+
+1. apt install -y protobuf-compiler
+// protoc --version
+
+// copy protoc file to /usr/local/go/bin/
+2. sudo cp /usr/bin/protoc /usr/local/go/bin/
+
+
+3. get below packages: 
+    a. go get google.golang.org/protobuf
+    b. go get google.golang.org/protobuf/proto
+    c. go get google.golang.org/grpc
+
+3. Install the below packages. Will be installed in $GoBIN -> defaulting to $GOPATH/bin = ~/go/bin
+    i. go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
+    ii. go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
+
+// add the above path
+4. export PATH="$PATH:$(go env GOPATH)/bin"
+
+5. generate go code for the proto file
+    protoc --go_out=. --go-grpc_out=. ./game.proto

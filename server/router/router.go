@@ -1,6 +1,10 @@
 package router
 
 import (
+	"fmt"
+	"lite-social-presence-system/literals"
+	"lite-social-presence-system/models"
+	"lite-social-presence-system/mongodao"
 	"lite-social-presence-system/server/apis"
 	"net/http"
 
@@ -25,5 +29,25 @@ func InitRoutes() *mux.Router {
 	r.HandleFunc("/game/party/join", apis.JoinGamePartyHandler).Methods(http.MethodPatch)
 	r.HandleFunc("/game/party/exit", apis.ExitGamePartyHandler).Methods(http.MethodPatch)
 	r.HandleFunc("/game/party/remove", apis.RemoveFromGamePartyHandler).Methods(http.MethodPatch)
+
+	fmt.Printf("REST API server started on %v address\n", literals.RestAPIServerAddress)
 	return r
+}
+
+func InitServices(gamerServer *models.GameServer, mgDAO mongodao.MongoDAO) {
+	// init services
+	// friends services
+	apis.InitGetUsersService(mgDAO)
+	apis.InitGetFriendsService(mgDAO)
+	apis.InitSendFriendRequestService(mgDAO)
+	apis.InitHandleFriendRequestService(mgDAO)
+	apis.InitRemoveFriendsService(mgDAO)
+
+	// game party services
+	apis.InitCreateGamePartyService(gamerServer, mgDAO)
+	apis.InitInviteToGamePartyService(gamerServer, mgDAO)
+	apis.InitHandleGamePartyInviteService(gamerServer, mgDAO)
+	apis.InitJoinGamePartyService(gamerServer, mgDAO)
+	apis.InitExitGamePartyService(gamerServer, mgDAO)
+	apis.InitRemoveUsersFromGamePartyService(gamerServer, mgDAO)
 }

@@ -10,7 +10,9 @@ import (
 	"lite-social-presence-system/server/common"
 	"lite-social-presence-system/server/router"
 	"log"
+	"net"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -40,7 +42,6 @@ func main() {
 	}
 
 	// keep checking game party duration in the background
-	// think of some better appraoch to check party duration
 	go func() {
 		for {
 			CheckPartyDuration(gamerServer, mgDAO)
@@ -48,34 +49,45 @@ func main() {
 		}
 	}()
 
-	fmt.Println("Starting the API server...")
+	// init services
+	router.InitServices(gamerServer, mgDAO)
 
-	// on joining user ID will be moved from accepted array, if present else return, to players array
+	fmt.Println("Starting the server...")
 
-	// initServices
-	// friends services
-	apis.InitGetUsersService(mgDAO)
-	apis.InitGetFriendsService(mgDAO)
-	apis.InitSendFriendRequestService(mgDAO)
-	apis.InitHandleFriendRequestService(mgDAO)
-	apis.InitRemoveFriendsService(mgDAO)
+	// concurrently start REST API server and gRPC server
+	go func() {
+		r := router.InitRoutes()
+		server := &http.Server{
+			Handler: r,
+			Addr:    literals.RestAPIServerAddress,
+			// WriteTimeout: 200 * time.Second,
+			// ReadTimeout:  200 * time.Second,
+		}
+		// start REST API server
+		log.Fatal(server.ListenAndServe())
+	}()
 
-	// game party services
-	apis.InitCreateGamePartyService(gamerServer, mgDAO)
-	apis.InitInviteToGamePartyService(gamerServer, mgDAO)
-	apis.InitHandleGamePartyInviteService(gamerServer, mgDAO)
-	apis.InitJoinGamePartyService(gamerServer, mgDAO)
-	apis.InitExitGamePartyService(gamerServer, mgDAO)
-	apis.InitRemoveUsersFromGamePartyService(gamerServer, mgDAO)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		// start gRPC server
+		lis, err := net.Listen(literals.GRPCNetwork, literals.GRPCServerAddress)
 
-	r := router.InitRoutes()
-	server := &http.Server{
-		Handler: r,
-		Addr:    "127.0.0.1:8081",
-		// WriteTimeout: 200 * time.Second,
-		// ReadTimeout:  200 * time.Second,
-	}
-	log.Fatal(server.ListenAndServe())
+		if err != nil {
+			log.Fatalf("failed to listen: %v\n", err)
+		}
+
+		// create a gRPC server
+		grpcServer := apis.InitStreamService(gamerServer)
+
+		fmt.Printf("gRPC server started on %v address\n", literals.GRPCServerAddress)
+		if err := grpcServer.Serve(lis); err != nil {
+			log.Fatalf("failed to serve: %v\n", err)
+		}
+		wg.Done()
+	}()
+
+	wg.Wait()
 }
 
 // terminate the game party if the time is over
