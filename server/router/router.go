@@ -44,7 +44,7 @@ func InitServices(mgDAO mongodao.MongoDAO, userServer *models.UserServer, gamerS
 
 	// user services
 	apis.InitUserLoginService(mgDAO, userServer)
-	apis.InitUserLogOutService(mgDAO)
+	apis.InitUserLogOutService(mgDAO, userServer)
 
 	// friends services
 	apis.InitGetUsersService(mgDAO)

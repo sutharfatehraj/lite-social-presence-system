@@ -1,7 +1,5 @@
 package models
 
-import "sync"
-
 type UserStatus string
 
 const (
@@ -12,16 +10,10 @@ const (
 	// UserStatusSuspended UserStatus = "suspended"
 )
 
-// to keep track of all online users
+// to keep track of users who are listening for player online update
 type UserServer struct {
 	UserDetails map[string]*UserDetails
-	Mutex       sync.Mutex
 }
-
-// type UserAndFriendId struct {
-// 	UserId   string
-// 	FriendId string
-// }
 
 type UserDetails struct {
 	// FriendId              string      `json:"friendId"`

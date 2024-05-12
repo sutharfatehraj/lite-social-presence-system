@@ -12,6 +12,8 @@ To always restart the container on boot up.
 Make sure the docker is in enabled state by running >sudo systemctl enable docker 
 sudo docker update --restart=always mymongo
 
+-----------------
+
 Current Implementation for game party: 
 User can invite only his firends to the game party.
 Future work: User can choose to invite friends for private sessions or open the invitation to the public for more social interaction.
@@ -22,6 +24,7 @@ When player is online but not in any game party, player status: "idle" else "in-
 Create a user-login endpoint. This will update the status to "idle".
 Whenver a user logs-in, broadcast a real time message to all his friends with his online status
 
+----------------------
 For protocol buffers
 
 1. apt install -y protobuf-compiler
@@ -62,3 +65,10 @@ Real time services
 2. notify the user whenever his friend comes online
 
 ToDo: have multiple instances
+
+-----------
+
+Things installed for the project
+docker
+golang
+protoc (gRPC)

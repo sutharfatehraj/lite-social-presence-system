@@ -21,13 +21,15 @@ var userLogOutServiceStruct UserLogOutService
 var userLogOutServiceOnce sync.Once
 
 type userLogOutService struct {
-	mongoDAO mongodao.MongoDAO
+	mongoDAO   mongodao.MongoDAO
+	userServer *models.UserServer
 }
 
-func InitUserLogOutService(mongodao mongodao.MongoDAO) UserLogOutService {
+func InitUserLogOutService(mongodao mongodao.MongoDAO, userSrvr *models.UserServer) UserLogOutService {
 	userLogOutServiceOnce.Do(func() {
 		userLogOutServiceStruct = &userLogOutService{
-			mongoDAO: mongodao,
+			mongoDAO:   mongodao,
+			userServer: userSrvr,
 		}
 	})
 	return userLogOutServiceStruct
@@ -115,6 +117,12 @@ func (u userLogOutService) LogOutUser(ctx context.Context, requestData *models.U
 	}
 
 	// asynchronously make the user server channel as nil if present
+	go func() {
+		if u.userServer != nil && u.userServer.UserDetails != nil && u.userServer.UserDetails[requestData.UserId] != nil {
+			fmt.Printf("%v logging out. closing the user online status channel\n", requestData.UserId)
+			close(u.userServer.UserDetails[requestData.UserId].FriendOnlineUpdateMsg)
+		}
+	}()
 
 	return nil
 }

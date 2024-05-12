@@ -10,8 +10,6 @@ import (
 	"lite-social-presence-system/mongodao"
 	"net/http"
 	"sync"
-	// "go.mongodb.org/mongo-driver/mongo"
-	// "google.golang.org/protobuf/proto"
 )
 
 type GetUsersService interface {

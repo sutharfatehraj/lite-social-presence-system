@@ -46,6 +46,7 @@ func (s userService) StreamUserStatusChange(requestData *gampepb.UserStatusChang
 		var wg sync.WaitGroup
 
 		// initialize the channel
+		// this channel should be closed when this user logs out
 		s.userServer.UserDetails[requestData.UserId] = &models.UserDetails{
 			FriendOnlineUpdateMsg: make(chan string),
 		}
@@ -98,6 +99,7 @@ func (s userService) StreamPlayerJoinedStatus(requestData *gampepb.PlayerInParty
 				var wg sync.WaitGroup
 
 				// initialize the channel to listen to any player joining
+				// this channel should be closed when the player ends the game party // end party API is not yet implemented
 				// gameParty.PlayerStatusUpdateMsg = make(chan string) // unbuffered channel
 				gameParty.PlayerStatusUpdateMsg = make(chan string, 1) // channel with capacity 1 so that sender does not get blocked when sending data for 1 user and can proceed with its work
 
@@ -116,7 +118,6 @@ func (s userService) StreamPlayerJoinedStatus(requestData *gampepb.PlayerInParty
 					}(msg)
 				}
 				wg.Wait()
-				// close(gameParty.PlayerStatusUpdateMsg) //close the channel here?
 			} else {
 				errMsg = "invalid userId. User has either not created the party or has not joined the party"
 			}
