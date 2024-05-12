@@ -1,0 +1,21 @@
+version: "3.8"  # Docker Compose version
+
+# To communicate between multiple containers
+
+services:
+  # MongoDB service
+  mymongodb:
+    image: mongo:latest
+    ports:
+      - 27017:27017
+    volumes:
+      - /home/fatehraj/mongodb-docker:/data/db # maps a directory on your host machine to a directory within the container, persisting your data even after killing the container
+
+  # My project service
+  myproject:
+    build: .  # Build the image from the current directory Dockerfile
+    ports:
+      - 8081:8081 # Map host port to container port
+      - 8083:8083
+    depends_on:
+      - mymongodb  # Wait for MongoDB to be ready before starting your app

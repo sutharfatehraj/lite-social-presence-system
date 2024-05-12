@@ -1,4 +1,5 @@
-mongo_uri: "mongodb://127.0.0.1:2717"
-rest_api_server_address: "127.0.0.1:8081"
+# mongo_uri: "mongodb://127.0.0.1:2717" # to connect to mongo on localhost or through this project's docker image
+mongo_uri: "mongodb://mymongodb:27017" # to connect to mongo in docker compose
+rest_api_server_address: "0.0.0.0:8081"
 grpc_network: "tcp"
 grpc_server_address: "0.0.0.0:8083"

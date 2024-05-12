@@ -69,9 +69,16 @@ ToDo: have multiple instances
 -----------
 
 Things installed for the project
-docker
+docker io/compose
 golang
 protoc (gRPC)
+
+----------
+To run a docker container
+sudo docker run -d -p 2717:27017 -v ~/mongodb-docker:/data/db --name mymongo mongo:latest
+
+To open mongo shell inside the docker container
+sudo docker exec -it mymongo mongosh
 
 ------
 
@@ -81,5 +88,36 @@ sudo docker build -t mycode:1.0 .
 // To run the docker container from given image 
 sudo docker run --network host -d --name myserver mycode:1.0 
 
-// currently the connection to ports is not  happening w/o --network as host
-// figure out solution for it like creating a new network, etch
+// currently the connection to ports is not happening w/o --network as host
+// figure out solution for it like creating a custome network, etc
+
+In custom network
+1. run the mongo container
+2. run you docker container
+
+now they should be able to communicate with each other
+
+---------------------
+
+docker-compose
+
+// to start and run the containers
+sudo docker-compose up -d --build // build tag not be used everytime
+
+// if no changes in docker-compose file, run
+
+sudo docker-compose up -d 
+
+// top end services in docker compose
+sudo docker-compose down 
+
+// to see running docker compose status
+sudo docker-compose ps
+
+// to see logs for your project server
+sudo docker logs lite-social-presence-system_myproject_1 -f
+
+--------
+"127.0.0.1:8081" for running local server. Not with docker compose.
+For any other networks, use "0.0.0.1" instead of "127.0.0.1"
+
