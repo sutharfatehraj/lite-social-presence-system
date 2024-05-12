@@ -1,8 +1,6 @@
 package router
 
 import (
-	"fmt"
-	"lite-social-presence-system/literals"
 	"lite-social-presence-system/models"
 	"lite-social-presence-system/mongodao"
 	"lite-social-presence-system/server/apis"
@@ -35,7 +33,6 @@ func InitRoutes() *mux.Router {
 	r.HandleFunc("/game/party/exit", apis.ExitGamePartyHandler).Methods(http.MethodPatch)
 	r.HandleFunc("/game/party/remove", apis.RemoveFromGamePartyHandler).Methods(http.MethodPatch)
 
-	fmt.Printf("REST API server started on %v address\n", literals.RestAPIServerAddress)
 	return r
 }
 

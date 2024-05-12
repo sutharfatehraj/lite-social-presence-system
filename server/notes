@@ -72,3 +72,14 @@ Things installed for the project
 docker
 golang
 protoc (gRPC)
+
+------
+
+// build the docker image
+sudo docker build -t mycode:1.0 .
+
+// To run the docker container from given image 
+sudo docker run --network host -d --name myserver mycode:1.0 
+
+// currently the connection to ports is not  happening w/o --network as host
+// figure out solution for it like creating a new network, etch

@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	config "lite-social-presence-system"
 	"lite-social-presence-system/literals"
 	"lite-social-presence-system/models"
 	"lite-social-presence-system/mongodao"
@@ -19,8 +20,15 @@ import (
 )
 
 func StartServer() {
+
+	cfg, err := config.LoadConfig("../config.yaml") // Replace with your config file path
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
 	// Get Client, Context, CalcelFunc and err from connect method.
-	client, ctx, cancel, errConnecting := mongodao.Connect("mongodb://127.0.0.1:2717/") //"mongodb://localhost:2717")
+	client, ctx, cancel, errConnecting := mongodao.Connect(cfg.MongoURI)
 	if errConnecting != nil {
 		fmt.Println("Error connecting to mongoDB:", errConnecting)
 		return
@@ -60,9 +68,10 @@ func StartServer() {
 	// concurrently start REST API server and gRPC server
 	go func() {
 		r := router.InitRoutes()
+		fmt.Printf("REST API server started on %v address\n", cfg.RestAPIServerAddress)
 		server := &http.Server{
 			Handler: r,
-			Addr:    literals.RestAPIServerAddress,
+			Addr:    cfg.RestAPIServerAddress,
 			// WriteTimeout: 200 * time.Second,
 			// ReadTimeout:  200 * time.Second,
 		}
@@ -74,7 +83,7 @@ func StartServer() {
 	wg.Add(1)
 	go func() {
 		// start gRPC server
-		lis, err := net.Listen(literals.GRPCNetwork, literals.GRPCServerAddress)
+		lis, err := net.Listen(cfg.GRPCNetwork, cfg.GRPCServerAddress)
 
 		if err != nil {
 			log.Fatalf("failed to listen: %v\n", err)
@@ -83,7 +92,7 @@ func StartServer() {
 		// create a gRPC server
 		grpcServer := apis.InitStreamService(userServer, gamerServer)
 
-		fmt.Printf("gRPC server started on %v address\n", literals.GRPCServerAddress)
+		fmt.Printf("gRPC server started on %v address\n", cfg.GRPCServerAddress)
 		if err := grpcServer.Serve(lis); err != nil {
 			log.Fatalf("failed to serve: %v\n", err)
 		}

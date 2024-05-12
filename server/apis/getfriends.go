@@ -84,7 +84,7 @@ func GetFriendsHandler(w http.ResponseWriter, r *http.Request) {
 		errStrings = append(errStrings, err.Error())
 		return
 	} else {
-		fmt.Printf("Retrieved: %+v", friends)
+		fmt.Printf("Found %d friends\n", len(friends))
 		responseStatusCode = http.StatusOK
 	}
 

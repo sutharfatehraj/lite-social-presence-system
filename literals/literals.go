@@ -1,11 +1,15 @@
 package literals
 
 const (
-	RestAPIServerAddress = "127.0.0.1:8081"
+	/*
+		MongoURI = "mongodb://127.0.0.1:2717" // "mongodb://localhost:2717"
 
-	// gRPC
-	GRPCNetwork       = "tcp"
-	GRPCServerAddress = "127.0.0.1:8083"
+		RestAPIServerAddress = "127.0.0.1:8081"
+
+		// gRPC
+		GRPCNetwork       = "tcp"
+		GRPCServerAddress = "127.0.0.1:8083"
+	*/
 
 	EmptyString = ""
 
