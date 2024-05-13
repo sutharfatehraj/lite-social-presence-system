@@ -47,4 +47,26 @@ Backend services for a lite social-presence system game using Golang
 1. **User gets a notification whenever a player joins the party**
 2. **User Friend gets a notification whenever he logs in**
 
+<h4> Docker Compose</h4>
+
+Inside the `lite-social-presence-system` project directory, 
+run `sudo docker-compose up -d --build` to start the services.
+Monitor logs using command `docker logs lite-social-presence-system_myproject_1 -f`.
+
+For calling the REST APIs, import `GameRestApisPostman.json` file in Postman
+
+For gRPC, invoke
+1. localhost:8083
+   UserService/StreamUserStatusChange
+2. localhost:8083
+   UserService/StreamPlayerJoinedStatus
+
+<h4>minikube</h4>
+start the minikube: `minikube start --driver=docker`
+
+apply the deployment using: `kubectl apply -f deployment.yaml`
+
+apply the service using: `kubectl apply -f service.yaml`
+
+**Problem: Getting `Exiting due to SVC_UNREACHABLE: service not available: no running pod for service my-app found` error and not able to access the service using K8S
 

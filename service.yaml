@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-app-service
+spec:
+  selector:
+    app: my-app #pods to which the service should route traffic to
+  ports:
+  - protocol: TCP
+    port: 8081  # service port to access the application
+    targetPort: 8081  # Map service port to container port
+    name: rest-api
+  - protocol: TCP
+    port: 8083
+    targetPort: 8083
+    name: grpc
+  type: NodePort

@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-app #pod to which the deployment will apply to
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+      - name: my-app
+        image: mycode:1.0  # Project Docker image
+        ports:
+        - containerPort: 8081
+          name: rest-api
+        - containerPort: 8083
+          name: grpc
+      - name: mymongodb
+        image: mongo:latest  # MongoDb Docker image

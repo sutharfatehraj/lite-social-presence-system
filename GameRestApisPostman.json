@@ -1,0 +1,239 @@
+{
+    "clientName": "Thunder Client",
+    "collectionName": "social presence system",
+    "collectionId": "8471394f-77e7-4e14-bb61-693bb466b671",
+    "dateExported": "2024-05-13T06:06:56.548Z",
+    "version": "1.2",
+    "folders": [
+        {
+            "_id": "7a83bf8b-ab9c-4280-a4cd-affbc8bbbf50",
+            "name": "game-party",
+            "containerId": "",
+            "created": "2024-05-09T13:17:12.190Z",
+            "sortNum": 10000
+        },
+        {
+            "_id": "005a6b1b-5ff7-448c-89f4-3fc12185b9c8",
+            "name": "game-friends",
+            "containerId": "",
+            "created": "2024-05-09T13:20:02.723Z",
+            "sortNum": 20000
+        },
+        {
+            "_id": "a2562537-5049-435c-bbad-7be6f77afff4",
+            "name": "user",
+            "containerId": "",
+            "created": "2024-05-11T11:22:25.001Z",
+            "sortNum": 30000
+        }
+    ],
+    "requests": [
+        {
+            "_id": "f556b05c-96c2-4a67-8359-b6d35114bb21",
+            "colId": "8471394f-77e7-4e14-bb61-693bb466b671",
+            "containerId": "005a6b1b-5ff7-448c-89f4-3fc12185b9c8",
+            "name": "view-friends",
+            "url": "http://127.0.0.1:8081/game/friends?id=114",
+            "method": "GET",
+            "sortNum": 10000,
+            "created": "2024-05-06T10:11:56.589Z",
+            "modified": "2024-05-13T05:12:32.019Z",
+            "headers": [],
+            "params": [
+                {
+                    "name": "id",
+                    "value": "114",
+                    "isPath": false
+                }
+            ]
+        },
+        {
+            "_id": "e72753fb-5937-44d5-b9b6-39de07a9a0bc",
+            "colId": "8471394f-77e7-4e14-bb61-693bb466b671",
+            "containerId": "7a83bf8b-ab9c-4280-a4cd-affbc8bbbf50",
+            "name": "handle-game-party",
+            "url": "http://127.0.0.1:8081/game/party/handle",
+            "method": "PATCH",
+            "sortNum": 10000,
+            "created": "2024-05-09T10:39:43.022Z",
+            "modified": "2024-05-11T10:30:06.079Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"partyId\": \"2f2dcbec-5df3-421e-bf37-c4f75fe348cc\",\n  \"userId\": \"114\",\n  \"status\": \"accepted\"\n}",
+                "form": []
+            }
+        },
+        {
+            "_id": "b2189730-4503-4194-bbe3-11c008888539",
+            "colId": "8471394f-77e7-4e14-bb61-693bb466b671",
+            "containerId": "a2562537-5049-435c-bbad-7be6f77afff4",
+            "name": "login",
+            "url": "http://127.0.0.1:8081/user/login",
+            "method": "PATCH",
+            "sortNum": 10000,
+            "created": "2024-05-11T11:10:16.167Z",
+            "modified": "2024-05-13T06:06:25.662Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"userId\": \"114\",\n  \"password\": \"pasasword\"\n}",
+                "form": []
+            }
+        },
+        {
+            "_id": "f151add4-34b0-48c0-b203-191628f0b16d",
+            "colId": "8471394f-77e7-4e14-bb61-693bb466b671",
+            "containerId": "005a6b1b-5ff7-448c-89f4-3fc12185b9c8",
+            "name": "friend-request",
+            "url": "http://127.0.0.1:8081/game/friends/request",
+            "method": "PATCH",
+            "sortNum": 20000,
+            "created": "2024-05-06T10:20:44.728Z",
+            "modified": "2024-05-11T11:07:26.331Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"userId\": \"111\",\n  \"friendIds\": [\n    \"114\"\n  ]\n}",
+                "form": []
+            }
+        },
+        {
+            "_id": "3875fa41-3d27-4d68-a0b6-a50e79c2e2c1",
+            "colId": "8471394f-77e7-4e14-bb61-693bb466b671",
+            "containerId": "7a83bf8b-ab9c-4280-a4cd-affbc8bbbf50",
+            "name": "invite",
+            "url": "http://127.0.0.1:8081/game/party/invite",
+            "method": "PATCH",
+            "sortNum": 20000,
+            "created": "2024-05-08T11:53:39.808Z",
+            "modified": "2024-05-11T10:29:55.615Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"partyId\": \"2f2dcbec-5df3-421e-bf37-c4f75fe348cc\",\n  \"userId\": \"111\",\n  \"friendIds\": [\n    \"114\"\n  ]\n}",
+                "form": []
+            }
+        },
+        {
+            "_id": "fda887f9-a7b6-482a-ac2f-f16a855d16d4",
+            "colId": "8471394f-77e7-4e14-bb61-693bb466b671",
+            "containerId": "a2562537-5049-435c-bbad-7be6f77afff4",
+            "name": "logout",
+            "url": "http://127.0.0.1:8081/user/logout",
+            "method": "PATCH",
+            "sortNum": 20000,
+            "created": "2024-05-11T11:29:43.861Z",
+            "modified": "2024-05-11T13:27:27.412Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"userId\": \"114\"\n}",
+                "form": []
+            }
+        },
+        {
+            "_id": "afdcce89-1454-42c6-b058-fcae56f31762",
+            "colId": "8471394f-77e7-4e14-bb61-693bb466b671",
+            "containerId": "7a83bf8b-ab9c-4280-a4cd-affbc8bbbf50",
+            "name": "create",
+            "url": "http://127.0.0.1:8081/game/party/create",
+            "method": "POST",
+            "sortNum": 25000,
+            "created": "2024-05-07T05:58:02.922Z",
+            "modified": "2024-05-08T14:04:59.194Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"userId\": \"111\"\n}",
+                "form": []
+            }
+        },
+        {
+            "_id": "8a12034e-206a-4558-a185-bad0287f25e5",
+            "colId": "8471394f-77e7-4e14-bb61-693bb466b671",
+            "containerId": "005a6b1b-5ff7-448c-89f4-3fc12185b9c8",
+            "name": "handle-friend-request",
+            "url": "http://127.0.0.1:8081/game/friends/handle-request",
+            "method": "PATCH",
+            "sortNum": 30000,
+            "created": "2024-05-06T11:38:58.127Z",
+            "modified": "2024-05-11T11:07:31.760Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"userId\": \"114\",\n  \"friendIds\": [\n    \"111\"\n  ],\n  \"status\": \"accepted\"\n}",
+                "form": []
+            }
+        },
+        {
+            "_id": "498f23d7-87c5-4b0e-ac4c-ed41c64504cd",
+            "colId": "8471394f-77e7-4e14-bb61-693bb466b671",
+            "containerId": "7a83bf8b-ab9c-4280-a4cd-affbc8bbbf50",
+            "name": "join",
+            "url": "http://127.0.0.1:8081/game/party/join",
+            "method": "PATCH",
+            "sortNum": 30000,
+            "created": "2024-05-09T12:04:37.889Z",
+            "modified": "2024-05-11T13:22:25.638Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"partyId\": \"2f2dcbec-5df3-421e-bf37-c4f75fe348cc\",\n  \"userId\": \"112\"\n}",
+                "form": []
+            }
+        },
+        {
+            "_id": "5bb41d2c-9699-4a1f-8204-b3b588e30074",
+            "colId": "8471394f-77e7-4e14-bb61-693bb466b671",
+            "containerId": "7a83bf8b-ab9c-4280-a4cd-affbc8bbbf50",
+            "name": "remove",
+            "url": "http://127.0.0.1:8081/game/party/remove",
+            "method": "PATCH",
+            "sortNum": 30000,
+            "created": "2024-05-09T15:57:06.099Z",
+            "modified": "2024-05-09T16:28:18.973Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"partyId\": \"2f2dcbec-5df3-421e-bf37-c4f75fe348cc\",\n  \"userId\": \"111\",\n  \"friendIds\": [\n    \"114\"\n  ]\n}",
+                "form": []
+            }
+        },
+        {
+            "_id": "a4024a26-79fe-4f21-ad6f-945a2f4e77dd",
+            "colId": "8471394f-77e7-4e14-bb61-693bb466b671",
+            "containerId": "005a6b1b-5ff7-448c-89f4-3fc12185b9c8",
+            "name": "remove-friends",
+            "url": "http://127.0.0.1:8081/game/friends/remove",
+            "method": "DELETE",
+            "sortNum": 40000,
+            "created": "2024-05-06T15:30:12.248Z",
+            "modified": "2024-05-11T11:07:39.872Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"userId\": \"114\",\n  \"friendIds\": [\n    \"112\"\n  ]\n}",
+                "form": []
+            }
+        },
+        {
+            "_id": "98508b25-0368-4bfa-87fc-6cc39640f0af",
+            "colId": "8471394f-77e7-4e14-bb61-693bb466b671",
+            "containerId": "7a83bf8b-ab9c-4280-a4cd-affbc8bbbf50",
+            "name": "exit",
+            "url": "http://127.0.0.1:8081/game/party/exit",
+            "method": "PATCH",
+            "sortNum": 40000,
+            "created": "2024-05-09T15:45:02.620Z",
+            "modified": "2024-05-09T15:46:26.135Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"partyId\": \"2f2dcbec-5df3-421e-bf37-c4f75fe348cc\",\n  \"userId\": \"112\"\n}",
+                "form": []
+            }
+        }
+    ],
+    "ref": "QdOk91fkm4uoCt80dtP72H0QKzkC4PUtSFLy5y9CGAy9dJhhpz0gGpQelYw4n6Cjs90WZ4XXLTI1AIo0EbSilg"
+}

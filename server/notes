@@ -99,7 +99,7 @@ now they should be able to communicate with each other
 
 ---------------------
 
-docker-compose
+docker-compose // to be in same directory as Dockerfile and to be run from there itself
 
 // to start and run the containers
 sudo docker-compose up -d --build // build tag not be used everytime
@@ -117,7 +117,68 @@ sudo docker-compose ps
 // to see logs for your project server
 sudo docker logs lite-social-presence-system_myproject_1 -f
 
+----------
+ISSUE:
+somehow in docker-compose, not able to bind host's 2717 with container port 27017.
+
 --------
 "127.0.0.1:8081" for running local server. Not with docker compose.
 For any other networks, use "0.0.0.1" instead of "127.0.0.1"
 
+-------------
+
+Add your local user to docker group so that your local user run docker commands without sudo.
+// very imp, else you will not be able to start minikube with driver as docker
+$ sudo usermod -aG docker $USER
+$ newgrp docker
+
+Kubernetes
+
+1. download minikube
+$ sudo apt update
+$ sudo apt upgrade -y
+$ sudo reboot
+
+// make sure docker is installed. we need to star minikube with driver as docker
+
+// download minikube into ~/Downloads
+wget https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+
+cp ./Downloads/minikube-linux-amd64 /usr/local/bin/minikube
+
+// give executable permission to user
+sudo chmod 755 /usr/local/bin/minikube
+
+// verify
+minikube version
+
+2. download kubectl
+
+curl': curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
+
+move it to /usr/local/bin/
+
+// give executable permission to kubectl
+sudo chmod 755 /usr/local/bin/kubectl
+
+---------------------
+
+To deploy on minikube
+
+Create deployment file
+Create service file
+
+start the minikube: minikube start --driver=docker
+
+apply the deployment using: kubectl apply -f deployment.yaml
+
+apply the service using: kubectl apply -f service.yaml
+
+---------------
+kubectl get nodes
+
+kubectl get pods
+
+minikube service my-app-service
+
+kubectl describe deployment my-app
